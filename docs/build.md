@@ -69,6 +69,8 @@ After building the live WASM and native app:
 ```sh
 node tests/test_live_worklet.mjs
 node tests/test_spectrogram.mjs
+node tests/test_particle_view.mjs
+node tests/test_trails_wasm.mjs build/ui/fluidgrain-live.wasm
 node tests/test_live_wasm.mjs build/ui/fluidgrain-live.wasm \
   build/native/fluidgrain_live_test
 node tests/test_live_deadline.mjs build/ui/fluidgrain-live.wasm 32000 500 1 1

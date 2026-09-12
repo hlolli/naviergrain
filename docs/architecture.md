@@ -33,6 +33,10 @@ The desktop host uses webview for the canvas and miniaudio for output. In the
 browser, a WASM worker feeds an AudioWorklet. The snapshot includes active grain
 positions, frequencies and pan values.
 
+The spiral maps the periodic 2D field into 3D display coordinates. At a periodic
+boundary, a grain reappears at the opposite edge. Position smoothing and trails
+stop at that crossing so they cannot draw a false path through the interior.
+
 GPU grain rendering consumes packed plans made by the C scheduler. Metal and
 CUDA run on a synthesis worker. If a GPU batch fails, its retained C plan
 renders the replacement before the worker switches to CPU for the rest of

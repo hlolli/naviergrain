@@ -61,7 +61,10 @@ export class FlowView {
     const next=new Map();this.records=[];
     for(let i=0;i<p[2];++i){const k=PARTICLE_HEADER+i*PARTICLE_STRIDE,id=p[k]+':'+p[k+1];
       const r={speed:p[k+8],hz:p[k+9],age:p[k+10],duration:p[k+11],px:p[k+12],py:p[k+13],pz:p[k+14],pan:p[k+15]};
-      r.before=this.previous.get(id);this.records.push(r);next.set(id,{px:r.px,py:r.py,pz:r.pz});
+      const cellX=Math.floor(p[k+4]),cellY=Math.floor(p[k+5]),before=this.previous.get(id);
+      // A periodic wrap is a cut in this chart, not a segment across the jet.
+      if(before&&before.cellX===cellX&&before.cellY===cellY)r.before=before;
+      this.records.push(r);next.set(id,{px:r.px,py:r.py,pz:r.pz,cellX,cellY});
     }
     this.previous=next;this.draw();
   }

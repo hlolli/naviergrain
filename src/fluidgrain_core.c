@@ -13,7 +13,7 @@
 typedef struct {
   double phase, increment, pan, base_log_pitch, log_pitch;
   double pitch_omega, pitch_bend;
-  double space[3],space_target[3];
+  double space[3],space_target[3],space_cell[2];
   FGParticle particle;
 #ifdef FG_TEST_SPATIAL_SHUFFLE
   FGParticle mapping;
@@ -262,7 +262,13 @@ void fg_sound_bounds(const FGEngine *e,double out[2]) {
 }
 static void sound_target(const FGEngine *e,FGVoice *v) {
   const FGParticle *p=&v->particle;
+  double cell_x=floor(p->path_x),cell_y=floor(p->path_y);
   fg_sound_position(p->x,p->y,p->motion_speed*e->smooth[FG_CONTROL_FLOW_SPEED],v->space_target);
+  /* The displayed chart has an edge at each periodic seam. Smoothing a wrap
+   * would invent a flight (and a pitch sweep) through its interior. */
+  if(cell_x!=v->space_cell[0]||cell_y!=v->space_cell[1])
+    memcpy(v->space,v->space_target,sizeof(v->space));
+  v->space_cell[0]=cell_x;v->space_cell[1]=cell_y;
 }
 static void sound_voice(const FGEngine *e,FGVoice *v) {
   double height=clamp(v->space[1]/FG_SOUND_HEIGHT+.5,0,1);
