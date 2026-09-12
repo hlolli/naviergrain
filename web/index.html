@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FluidGrain — sound workbench</title>
+<style>
+:root{color-scheme:dark;font-family:system-ui,sans-serif;background:#111b20;color:#e7f1ed}
+body{max-width:960px;margin:0 auto;padding:32px 20px;line-height:1.5}
+h1{font-size:clamp(2rem,5vw,3.2rem);margin:0;color:#baf8cf}
+h2{font-size:1.2rem}p{color:#b4c7c6}fieldset{min-width:0;border:1px solid #466262;border-radius:10px;margin:20px 0;padding:20px}
+legend{padding:0 8px}button,input,select,a{font:inherit}
+button,.download{background:#baf8cf;color:#11261c;border:0;border-radius:6px;padding:10px 16px;cursor:pointer}
+button:disabled{opacity:.45;cursor:default}button.secondary{background:#294344;color:#e7f1ed}
+label{display:flex;flex-direction:column;gap:4px;text-transform:capitalize}
+input{min-width:0;padding:8px;border:1px solid #52706e;border-radius:4px;background:#182b30;color:inherit}
+input[type=file]{width:min(92%,440px)}#controls{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px}
+.actions{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+audio,progress{width:100%;margin:12px 0}progress{accent-color:#baf8cf}small{color:#b4c7c6}
+:focus-visible{outline:3px solid #ffd38b;outline-offset:3px}
+#telemetry{font-variant-numeric:tabular-nums;font-size:.9rem}
+#flow{width:100%;max-width:560px;aspect-ratio:1;border:1px solid #466262;border-radius:10px} select{max-width:100%;background:#182b30;color:inherit;padding:8px} .visual-options{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:12px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<header><small>FLUID-DRIVEN GRANULAR SYNTHESIS</small><h1>FluidGrain</h1>
+<p>Shape a cloud, render it, then listen. Your audio stays in this browser.</p></header>
+<form id="settings">
+<fieldset><legend>Source &amp; duration</legend>
+<label>Load audio<input id="source" type="file" accept="audio/*"></label>
+<p id="source-label">Built-in bell · 1 second, 48 kHz</p>
+<div class="actions"><button id="bell" type="button" class="secondary">Use built-in bell</button>
+<label>Render seconds<input id="seconds" type="number" min="0.1" max="30" step="0.1" value="5" required></label></div>
+<small>Up to 30 seconds of source audio. Uses the first channel, decoded to 48 kHz, with looping enabled.</small>
+</fieldset>
+<fieldset><legend>Render engine</legend>
+<label>Engine<select id="backend"><option value="internal">Internal CPU — repeatable</option><option value="external">External CPU — experimental worker</option><option value="gpu">WebGPU fields — CPU grain playback</option><option value="grains">WebGPU grains — CPU fallback</option></select></label>
+<p id="backend-detail"></p>
+<label><input id="preview-enabled" type="checkbox" disabled> Listen while rendering (buffered preview)</label>
+<small>GPU grains only. Starts after about 85 ms of audio is ready; slow renders pause to refill. Controls stay fixed for the take. Preview edges are faded; the download is unchanged.</small>
+<label><input id="record-replay" type="checkbox" disabled> Save a replay file</label>
+<small>For external solvers. Includes your source audio and the captured take; up to 64 MiB. Replay later without a GPU.</small><p id="provider-detail" role="status"></p>
+</fieldset>
+<fieldset><legend>Sound controls</legend><div id="controls"></div>
+<p><button id="defaults" type="button" class="secondary">Restore controls</button></p>
+<small>Controls are captured at render start. Each render restarts the same seed.</small>
+</fieldset>
+<div class="actions"><button id="render" type="submit">Render sound</button>
+<button id="pause" type="button" class="secondary" disabled>Pause render</button>
+<button id="cancel" type="button" class="secondary" disabled>Cancel</button></div>
+</form>
+<section aria-label="Render and listen">
+<p id="status" role="status">Ready. Try the built-in bell or load your own sample.</p>
+<progress id="progress" max="1" value="0" aria-label="Render progress"></progress>
+<p id="telemetry"></p>
+<p id="preview-status" role="status"></p>
+<button id="preview-resume" type="button" class="secondary" hidden>Resume audio</button>
+<button id="preview-stop" type="button" class="secondary" disabled>Stop preview</button>
+<audio id="audio" controls aria-label="Rendered sound"></audio>
+<a id="replay-download" class="download" download="fluidgrain.fgreplay.json" hidden>Download replay</a>
+<a id="download" class="download" download="fluidgrain.wav" hidden>Download WAV</a>
+</section>
+<section aria-labelledby="visual-title">
+<h2 id="visual-title">Inside the flow</h2>
+<div class="visual-options">
+<label><span>Show flow</span><input id="visual-enabled" type="checkbox" checked></label>
+<label>Field view<select id="visual-mode"><option value="velocity">Velocity arrows</option><option value="vorticity">Vorticity</option><option value="strain">Strain magnitude</option></select></label>
+<label>Grain trails<select id="trail-count"><option>0</option><option>32</option><option selected>64</option><option>128</option></select></label>
+</div>
+<div id="visual-panel">
+<canvas id="flow" width="560" height="560" role="img" aria-label="Periodic fluid field. Amber marks are sounding grains; grey dots are silent emitters." aria-describedby="visual-detail"></canvas>
+<p id="visual-detail">Waiting for a field snapshot.</p>
+<small>Render-time view, not synchronized playback. Amber: sounding grains and sampled trails; grey: silent emitters. Top and bottom, left and right join. Visual controls do not affect sound.</small>
+</div>
+</section>
+<footer><p>Offline CPU rendering · no WebGPU needed. Dense clouds may take longer than their audio duration.
+The render is dry, with no limiter or effects. This is not live-performance playback.</p></footer>
+<script type="module" src="./main.js"></script>
+</body>
+</html>

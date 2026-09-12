@@ -1,0 +1,346 @@
+{
+  "version": 1,
+  "config": [
+    {
+      "name": "schema_version",
+      "default": 1,
+      "min": 1,
+      "max": 1,
+      "integer": true
+    },
+    {
+      "name": "grid_size",
+      "default": 32,
+      "min": 16,
+      "max": 64,
+      "integer": true
+    },
+    {
+      "name": "emitter_count",
+      "default": 512,
+      "min": 1,
+      "max": 4096,
+      "integer": true
+    },
+    {
+      "name": "max_grains",
+      "default": 512,
+      "min": 1,
+      "max": 4096,
+      "integer": true
+    },
+    {
+      "name": "fluid_hz",
+      "default": 60,
+      "min": 30,
+      "max": 240,
+      "integer": false
+    },
+    {
+      "name": "seed",
+      "default": 12345,
+      "min": 0,
+      "max": 16777215,
+      "integer": true
+    },
+    {
+      "name": "backend",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "integer": true
+    },
+    {
+      "name": "boundary",
+      "default": 0,
+      "min": 0,
+      "max": 0,
+      "integer": true
+    },
+    {
+      "name": "source_loop",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "integer": true
+    },
+    {
+      "name": "pressure_iterations",
+      "default": 64,
+      "min": 16,
+      "max": 256,
+      "integer": true
+    },
+    {
+      "name": "viscosity_iterations",
+      "default": 16,
+      "min": 4,
+      "max": 64,
+      "integer": true
+    },
+    {
+      "name": "instance_id",
+      "default": 0,
+      "min": 0,
+      "max": 16777215,
+      "integer": true
+    },
+    {
+      "name": "particle_hz",
+      "default": 240,
+      "min": 60,
+      "max": 1000,
+      "integer": false
+    }
+  ],
+  "control": [
+    {
+      "name": "gain",
+      "default": 0.15,
+      "min": 0,
+      "max": 2,
+      "integer": false
+    },
+    {
+      "name": "grain_rate",
+      "default": 120,
+      "min": 0,
+      "max": 32000,
+      "integer": false
+    },
+    {
+      "name": "grain_ms",
+      "default": 80,
+      "min": 5,
+      "max": 500,
+      "integer": false
+    },
+    {
+      "name": "pitch_ratio",
+      "default": 1,
+      "min": 0.25,
+      "max": 4,
+      "integer": false
+    },
+    {
+      "name": "position_center",
+      "default": 0.5,
+      "min": 0,
+      "max": 1,
+      "integer": false
+    },
+    {
+      "name": "position_span",
+      "default": 1,
+      "min": 0,
+      "max": 1,
+      "integer": false
+    },
+    {
+      "name": "pitch_depth",
+      "default": 7,
+      "min": 0,
+      "max": 24,
+      "integer": false
+    },
+    {
+      "name": "stereo_width",
+      "default": 1,
+      "min": 0,
+      "max": 1,
+      "integer": false
+    },
+    {
+      "name": "viscosity",
+      "default": 0.0001,
+      "min": 0,
+      "max": 0.01,
+      "integer": false
+    },
+    {
+      "name": "drive",
+      "default": 0.5,
+      "min": 0,
+      "max": 2,
+      "integer": false
+    },
+    {
+      "name": "swirl",
+      "default": 0.7,
+      "min": -1,
+      "max": 1,
+      "integer": false
+    },
+    {
+      "name": "turbulence",
+      "default": 0.2,
+      "min": 0,
+      "max": 1,
+      "integer": false
+    },
+    {
+      "name": "eddy_size",
+      "default": 0.2,
+      "min": 0.05,
+      "max": 0.5,
+      "integer": false
+    },
+    {
+      "name": "strain_drive",
+      "default": 0,
+      "min": -1,
+      "max": 1,
+      "integer": false
+    },
+    {
+      "name": "confinement",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "integer": false
+    },
+    {
+      "name": "inertia_ms",
+      "default": 0,
+      "min": 0,
+      "max": 1000,
+      "integer": false
+    },
+    {
+      "name": "attraction",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "integer": false
+    },
+    {
+      "name": "flow_speed",
+      "default": 1,
+      "min": 0,
+      "max": 4,
+      "integer": false
+    },
+    {
+      "name": "speed_to_density",
+      "default": 0.5,
+      "min": 0,
+      "max": 1,
+      "integer": false
+    },
+    {
+      "name": "strain_to_duration",
+      "default": 0.5,
+      "min": 0,
+      "max": 1,
+      "integer": false
+    },
+    {
+      "name": "mapping_mix",
+      "default": 1,
+      "min": 0,
+      "max": 1,
+      "integer": false
+    },
+    {
+      "name": "freeze",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "integer": true
+    },
+    {
+      "name": "reset",
+      "default": 0,
+      "min": 0,
+      "max": 1,
+      "integer": true
+    },
+    {
+      "name": "scheduler",
+      "default": 1,
+      "min": 0,
+      "max": 1,
+      "integer": true
+    }
+  ],
+  "stat": [
+    {
+      "name": "live_grains"
+    },
+    {
+      "name": "emitter_count"
+    },
+    {
+      "name": "effective_rate"
+    },
+    {
+      "name": "kinetic_energy"
+    },
+    {
+      "name": "rms_vorticity"
+    },
+    {
+      "name": "rms_strain"
+    },
+    {
+      "name": "rms_divergence"
+    },
+    {
+      "name": "max_divergence"
+    },
+    {
+      "name": "field_age_ms"
+    },
+    {
+      "name": "voice_drops"
+    },
+    {
+      "name": "snapshot_drops"
+    },
+    {
+      "name": "numeric_interventions"
+    },
+    {
+      "name": "status"
+    },
+    {
+      "name": "backend"
+    },
+    {
+      "name": "source_length"
+    },
+    {
+      "name": "snapshot_sequence"
+    },
+    {
+      "name": "control_events"
+    },
+    {
+      "name": "epoch"
+    },
+    {
+      "name": "pre_limiter_peak"
+    },
+    {
+      "name": "cap_drops"
+    }
+  ],
+  "status": [
+    "ready",
+    "frozen",
+    "stale_field",
+    "provider_lost",
+    "controls_clamped",
+    "numeric_intervention",
+    "voice_overflow",
+    "not_prepared"
+  ],
+  "notes": {
+    "instance_id": "Preview supports private CPU instances only; reserve exact portable integers 0..2^24-1.",
+    "mapping_reference_scales": {
+      "speed": 1,
+      "vorticity": 10,
+      "strain": 10
+    }
+  }
+}

@@ -1,0 +1,3 @@
+BasedOnStyle: LLVM
+# Csound arrays.h requires csdl.h to have defined the host ABI types first.
+SortIncludes: Never

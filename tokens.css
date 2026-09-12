@@ -1,0 +1,38 @@
+/* Hallmark · theme: custom sci-fi console · shared instrument tokens */
+:root {
+  --color-paper: oklch(14% .016 240);
+  --color-paper-2: oklch(18% .019 240);
+  --color-paper-3: oklch(23% .023 240);
+  --color-ink: oklch(94% .012 210);
+  --color-muted: oklch(74% .025 220);
+  --color-rule: oklch(37% .036 230);
+  --color-accent: oklch(82% .13 190);
+  --color-accent-ink: oklch(14% .016 240);
+  --color-focus: oklch(88% .12 190);
+  --color-error: oklch(78% .13 30);
+  --color-tube: oklch(63% .105 200);
+  --color-tube-light: oklch(91% .065 190);
+  --font-mono: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'IBM Plex Sans', sans-serif;
+  --space-xs: .5rem;
+  --space-sm: .75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2.5rem;
+  --text-sm: .875rem;
+  --text-base: 1rem;
+  --text-lg: 1.5rem;
+  --text-display: 2rem;
+  --radius-sm: 2px;
+  --radius-lg: 2px;
+  --dur-micro: 120ms;
+  --ease-out: cubic-bezier(.16,1,.3,1);
+}
+:root {
+  --color-overlay: oklch(19% .025 230 / .66);
+  --color-overlay-rule: oklch(64% .04 210 / .28);
+  --color-button: oklch(24% .025 230 / .6);
+  --color-shadow: oklch(3% .005 230 / .28);
+  --color-slider-fill: oklch(67% .105 190 / .42);
+}

@@ -1,0 +1,20 @@
+/build*/
+/Custom.cmake
+__pycache__/
+*.py[cod]
+*.wav
+*.mp4
+*.mp3
+.DS_Store
+/node_modules/
+/.worktrees/
+/.local/
+/.hallmark/
+.env
+.env.*
+
+# Video studies stay local until they move to their own repository.
+/tools/score_study.py
+/tools/render_study.c
+/tools/render_study_video.mm
+/tools/finish_study.py

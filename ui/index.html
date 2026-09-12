@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self' data: blob:; script-src 'self' 'unsafe-inline' 'wasm-unsafe-eval'; style-src 'self' 'unsafe-inline'; font-src data:; connect-src 'self'; worker-src 'self' blob:; object-src 'none'; base-uri 'none'">
+  <title>naviergrain</title>
+  <!--STYLE-->
+</head>
+<body>
+  <canvas tabindex="0" id="field" aria-label="Lagrangian particles in the shared spatial field. Drag to orbit; scroll to zoom."></canvas>
+  <header class="topbar">
+    <div class="identity"><h1>naviergrain</h1><span>NAVIER–STOKES · ∇·u = 0</span></div>
+    <div class="transport"><span id="backend" class="backend">Ready</span><button id="play" class="primary" type="button">Evolve</button><button id="stop" type="button" disabled>Stop</button></div>
+  </header>
+  <main>
+    <div id="empty" class="empty"><p class="field-equation">∂ₜu + (u·∇)u = −∇p + ν∇²u + f</p><span>Set the field in motion.</span></div>
+    <div class="camera-tools"><button id="camera-home" type="button">Reset view</button><button id="fullscreen" type="button">Full screen</button><span>DRAG TO ORBIT · SCROLL TO ZOOM</span></div>
+    <section class="audio-panel overlay" aria-label="Observation spectrum and numerical counters">
+      <div class="scope"><span id="output-level" title="Sampled observation amplitude">|a|</span><svg viewBox="0 0 1000 80" preserveAspectRatio="none" role="img" aria-label="Observation a(t), automatically scaled"><path class="baseline" d="M0 40H1000"/><polyline id="waveform" points="0,40 1000,40"/></svg></div>
+      <div class="spectrogram-wrap"><div class="frequency-labels"><span>12 kHz</span><span>55 Hz</span></div><canvas id="spectrogram" aria-label="Live spectrogram: time moves left, low frequencies at the bottom"></canvas><span class="spectrum-label">SPECTROGRAM</span></div>
+      <dl class="meters"><div><dt title="Active particles">N</dt><dd id="voices">0</dd></div><div><dt title="Particle starts skipped at the capacity limit">ΔN</dt><dd id="drops">0</dd></div><div><dt title="Audio buffer underruns">Buffer gaps</dt><dd id="underruns">0</dd></div><div><dt title="Elapsed audio observation time">tₐ</dt><dd id="played">0 s</dd></div></dl>
+    </section>
+    <aside class="controls-panel" aria-label="Field, particle and observation parameters">
+      <div class="control-heading"><h2>Coefficients</h2><div><button id="defaults" type="button" title="Restore default coefficients">Defaults</button><button id="collapse-controls" type="button" aria-expanded="true" aria-controls="control-body">Hide</button></div></div>
+      <div id="control-body">
+        <div id="fluid" class="control-grid" role="group" aria-label="Incompressible field"></div><div id="grains" class="control-grid" role="group" aria-label="Lagrangian particles"></div><div id="mapping" class="control-grid" role="group" aria-label="Observation"></div>
+        <div class="flow-actions"><button id="freeze" aria-pressed="false" type="button" title="Hold the fluid and particle evolution clock">Hold field</button><button id="reset" type="button" title="Reset fluid and particles to their initial state">Reset field</button></div>
+        <div class="options"><label><input id="trails" type="checkbox" checked> Trails</label><label><input id="cpu" type="checkbox"> CPU</label></div>
+        <p class="source-note" title="Maximum number of simultaneous particles">N ≤ 256</p><p id="gpu-note" class="help"></p>
+      </div>
+    </aside>
+  </main>
+  <footer><p id="status" role="status" aria-live="polite">Ready.</p><span id="field-clock">t = 0.00 s</span></footer>
+  <!--SCRIPT-->
+</body>
+</html>
