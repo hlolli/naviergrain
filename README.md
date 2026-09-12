@@ -5,6 +5,8 @@ simulation and turns their movement into sound, with each visible grain playing
 a short cosine wave. Height sets frequency. Horizontal position sets stereo pan,
 and faster motion shortens the grains.
 
+[![Watch naviergrain: Continuum Study 01 on YouTube](https://i.ytimg.com/vi/kj7AvNTSg-4/maxresdefault.jpg)](https://www.youtube.com/watch?v=kj7AvNTSg-4)
+
 Change viscosity, forcing or attraction and listen to the field change. The
 spiral, waveform and spectrogram share one canvas, with controls in the corner.
 The simulation uses a periodic 2D grid mapped into 3D space.
