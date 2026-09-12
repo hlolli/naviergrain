@@ -81,3 +81,32 @@ The last check measures queue pressure in Node. Test with an audio device too.
 The opcode's parameter definitions live in `schema/fluidgrain-v1.json`.
 After editing them, run `python3 tools/generate_schema.py`. Use `--check`
 to check the generated C, Csound and TypeScript files without changing them.
+
+## Release builds
+
+The [Release workflow](../.github/workflows/release.yml) builds the arm64 macOS
+app with Metal and a Csound WASM opcode plugin. Each run resolves Csound's
+`develop` branch once and records that commit in both build receipts.
+
+Run the workflow with an empty `release_tag` to test a build. Set it to a new
+`vX.Y.Z` tag matching the CMake version to publish after both jobs pass.
+Pushing a version tag also runs it. Existing releases are never replaced.
+
+After downloading the release assets, check them with:
+
+```sh
+shasum -a 256 -c SHA256SUMS
+gh attestation verify naviergrain-macos-arm64.zip --repo hlolli/naviergrain
+gh attestation verify naviergrain-csound-wasm.zip --repo hlolli/naviergrain
+```
+
+The app uses ad-hoc signing and has no Apple notarization. GitHub's build
+record proves where the download came from; it does not replace notarization.
+Hosted runners build Metal support but cannot test a physical GPU or audio
+device. Run the native Metal and live tests on an Apple Silicon Mac as well.
+
+The WASM archive contains `naviergrain.wasm`, the score includes and an example.
+Load that file through Csound's `withPlugins` option. It needs a Csound 7 WASM
+host compatible with the commit in `wasm-build.json`. The workflow loads and
+renders it using that exact host. This opcode plugin is separate from the
+standalone engine used by the live web app.

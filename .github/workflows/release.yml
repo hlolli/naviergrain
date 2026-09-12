@@ -1,0 +1,219 @@
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+    inputs:
+      release_tag:
+        description: 'New release tag (leave empty to build only)'
+        type: string
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}-${{ inputs.release_tag }}
+  cancel-in-progress: false
+
+env:
+  NIX_PATH: nixpkgs=https://github.com/NixOS/nixpkgs/archive/4db2c220f32fd162658ed1b7bb2f46a82996ddbe.tar.gz
+
+jobs:
+  source:
+    runs-on: ubuntu-24.04
+    outputs:
+      csound: ${{ steps.source.outputs.csound }}
+      tag: ${{ steps.source.outputs.tag }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - id: source
+        env:
+          REQUESTED_TAG: ${{ inputs.release_tag }}
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -euo pipefail
+          tag="$REQUESTED_TAG"
+          if [[ "$GITHUB_REF_TYPE" == tag ]]; then tag="$GITHUB_REF_NAME"; fi
+          if [[ -n "$tag" ]]; then
+            [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
+            version=$(sed -n 's/.*project(fluidgrain VERSION \([^ ]*\).*/\1/p' CMakeLists.txt)
+            [[ "$tag" == "v$version" ]]
+            existing=$(git ls-remote --tags origin "refs/tags/$tag" "refs/tags/$tag^{}" | tail -1 | cut -f1)
+            if [[ -n "$existing" && "$existing" != "$GITHUB_SHA" ]]; then
+              echo 'This tag points to another commit.' >&2; exit 1
+            fi
+            if gh release view "$tag" >/dev/null 2>&1; then
+              echo 'This release already exists; refusing to replace it.' >&2; exit 1
+            fi
+          fi
+          csound=$(git ls-remote https://github.com/csound/csound.git refs/heads/develop | cut -f1)
+          [[ "$csound" =~ ^[0-9a-f]{40}$ ]]
+          echo "csound=$csound" >> "$GITHUB_OUTPUT"
+          echo "tag=$tag" >> "$GITHUB_OUTPUT"
+          echo "Csound develop: $csound" >> "$GITHUB_STEP_SUMMARY"
+
+  macos:
+    needs: source
+    runs-on: macos-15
+    timeout-minutes: 30
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      CSOUND_COMMIT: ${{ needs.source.outputs.csound }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: csound/csound
+          ref: ${{ env.CSOUND_COMMIT }}
+          path: build/csound-source
+          persist-credentials: false
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: '1.3.13'
+      - name: Build arm64 app with Metal
+        run: |
+          set -euo pipefail
+          [[ "$(uname -m)" == arm64 ]]
+          brew install cmake ninja flex bison
+          export PATH="$(brew --prefix bison)/bin:$(brew --prefix flex)/bin:$PATH"
+          cmake -S build/csound-source -B build/csound-config -G Ninja \
+            -DBUILD_UTILITIES=OFF -DUSE_LIBSNDFILE=OFF -DBUILD_TESTS=OFF
+          mkdir -p build/csound-headers
+          cp build/csound-source/include/*.h build/csound-headers/
+          cp build/csound-config/include/{version,float-version}.h build/csound-headers/
+          cmake -S . -B build/native -G Ninja -DCMAKE_BUILD_TYPE=Release \
+            -DHLOLLI_CSOUND_INCLUDE_DIR="$PWD/build/csound-headers" \
+            -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=13.3 \
+            -DFLUIDGRAIN_DESKTOP=ON -DFLUIDGRAIN_METAL=ON
+          cmake --build build/native --parallel 3
+          # Hosted runners cannot qualify physical GPU/audio-device behavior.
+          ctest --test-dir build/native --output-on-failure \
+            -R '^fluidgrain\.(core|view|shuffle|grain_plan|extrema|fluid|resampler|provider|transport|packet_wire|package|schema)$'
+      - name: Package app
+        run: |
+          set -euo pipefail
+          app=build/native/naviergrain.app
+          binary="$app/Contents/MacOS/naviergrain"
+          [[ "$(lipo -archs "$binary")" == arm64 ]]
+          otool -L "$binary" | tee build/native/libraries.txt
+          grep -q '/System/Library/Frameworks/Metal.framework' build/native/libraries.txt
+          python3 -c 'from pathlib import Path; lines=Path("build/native/libraries.txt").read_text().splitlines()[1:]; assert all(x.strip().startswith(("/System/Library/", "/usr/lib/")) for x in lines), lines'
+          plutil -insert LSMinimumSystemVersion -string 13.3 "$app/Contents/Info.plist"
+          codesign --force --deep --sign - "$app"
+          codesign --verify --deep --strict "$app"
+          mkdir -p build/assets
+          ditto -c -k --sequesterRsrc --keepParent "$app" build/assets/naviergrain-macos-arm64.zip
+          clang --version > build/compiler.txt
+          python3 tools/release_manifest.py build/assets --target macos-arm64 \
+            --csound-commit "$CSOUND_COMMIT" --compiler build/compiler.txt
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        id: attest
+        with:
+          subject-path: build/assets/*
+          create-storage-record: false
+      - run: cp "$BUNDLE" build/assets/macos-arm64-attestation.json
+        env:
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: macos-release
+          path: build/assets/
+          if-no-files-found: error
+
+  wasm:
+    needs: source
+    runs-on: ubuntu-24.04
+    timeout-minutes: 60
+    permissions:
+      contents: read
+      id-token: write
+      attestations: write
+    env:
+      CSOUND_COMMIT: ${{ needs.source.outputs.csound }}
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          repository: csound/csound
+          ref: ${{ env.CSOUND_COMMIT }}
+          path: build/csound-source
+          persist-credentials: false
+      - uses: cachix/install-nix-action@b85815f71a6de0ddee80b8a80a98d43f4bcc66c7 # v31
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: '1.3.13'
+      - name: Build and load the Csound opcode plugin
+        run: |
+          set -euo pipefail
+          nix-build tools/plugin-wasm.nix --arg csoundSource ./build/csound-source \
+            --argstr csoundRev "$CSOUND_COMMIT" -o build/plugin
+          npm ci --prefix build/csound-source/wasm/browser --ignore-scripts --no-audit --no-fund
+          bun tools/test_release_wasm.ts build/csound-source \
+            build/plugin/csound/lib/csound.wasm.z build/plugin/lib/naviergrain.wasm
+      - name: Package plugin
+        run: |
+          set -euo pipefail
+          mkdir -p build/assets build/wasm-package/include build/wasm-package/examples
+          cp build/plugin/lib/naviergrain.wasm build/wasm-package/
+          cp include/{naviergrain,fluidgrain}.inc build/wasm-package/include/
+          cp examples/naviergrain.csd build/wasm-package/examples/
+          cp LICENSE COPYRIGHT build/wasm-package/
+          cp -R build/plugin/licenses build/wasm-package/
+          (cd build/wasm-package && zip -qr ../assets/naviergrain-csound-wasm.zip .)
+          python3 tools/release_manifest.py build/assets --target wasm \
+            --csound-commit "$CSOUND_COMMIT" --compiler build/plugin/compiler.txt
+      - uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4
+        id: attest
+        with:
+          subject-path: build/assets/*
+          create-storage-record: false
+      - run: cp "$BUNDLE" build/assets/wasm-attestation.json
+        env:
+          BUNDLE: ${{ steps.attest.outputs.bundle-path }}
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: wasm-release
+          path: build/assets/
+          if-no-files-found: error
+
+  publish:
+    needs: [source, macos, wasm]
+    if: needs.source.outputs.tag != ''
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4
+        with:
+          pattern: '*-release'
+          merge-multiple: true
+          path: build/assets
+      - name: Publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_TAG: ${{ needs.source.outputs.tag }}
+          CSOUND_COMMIT: ${{ needs.source.outputs.csound }}
+        run: |
+          set -euo pipefail
+          cd build/assets
+          cat macos-arm64-SHA256SUMS wasm-SHA256SUMS > SHA256SUMS
+          sha256sum -c SHA256SUMS
+          cd ../..
+          python3 tools/release_notes.py > build/release-notes.md
+          gh release create "$RELEASE_TAG" build/assets/* --target "$GITHUB_SHA" \
+            --title "naviergrain $RELEASE_TAG" --notes-file build/release-notes.md --draft
+          gh release edit "$RELEASE_TAG" --draft=false

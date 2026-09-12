@@ -11,8 +11,15 @@
   <canvas tabindex="0" id="field" aria-label="Lagrangian particles in the shared spatial field. Drag to orbit; scroll to zoom."></canvas>
   <header class="topbar">
     <div class="identity"><h1>naviergrain</h1><span>NAVIER–STOKES · ∇·u = 0</span></div>
-    <div class="transport"><span id="backend" class="backend">Ready</span><button id="play" class="primary" type="button">Evolve</button><button id="stop" type="button" disabled>Stop</button></div>
+    <div class="transport"><span id="backend" class="backend">Ready</span><button id="play" class="primary" type="button">Evolve</button><button id="stop" type="button" disabled>Stop</button><div id="app-menu" class="app-menu"><button id="menu-toggle" type="button" aria-expanded="false" aria-controls="menu-panel">Menu</button><div id="menu-panel" class="menu-panel overlay" hidden><button id="show-about" type="button">About naviergrain</button><button id="quit" type="button" hidden>Quit</button></div></div></div>
   </header>
+  <dialog id="about" aria-labelledby="about-title">
+    <div class="about-heading"><h2 id="about-title">About naviergrain</h2><button id="close-about" type="button" aria-label="Close About">Close</button></div>
+    <p>Fluid motion made audible.</p>
+    <p>Created by <strong id="about-creator"></strong>.</p>
+    <nav id="about-links" aria-label="Creator and source code"></nav>
+    <p class="about-license">GPL-3.0-or-later · © 2026 Hlöðver Sigurðsson</p>
+  </dialog>
   <main>
     <div id="empty" class="empty"><p class="field-equation">∂ₜu + (u·∇)u = −∇p + ν∇²u + f</p><span>Set the field in motion.</span></div>
     <div class="camera-tools"><button id="camera-home" type="button">Reset view</button><button id="fullscreen" type="button">Full screen</button><span>DRAG TO ORBIT · SCROLL TO ZOOM</span></div>

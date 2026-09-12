@@ -3,6 +3,7 @@ import {FlowView} from './flow.js';
 import {Spectrogram} from './spectrogram.js';
 import {BrowserRuntime} from './runtime.js';
 import {liveControls} from './live-controls.js';
+import {installMenu} from './menu.js';
 const $=id=>document.getElementById(id);
 const native=typeof window.nativeCommand==='function';
 const controls=liveControls(schema.control),values=controls.map(c=>c.default);
@@ -16,6 +17,7 @@ const format=(i,v)=>i===2||i===15?(v*.001).toFixed(3)+' s':i===1?v.toFixed(0)+' 
 function status(message,error=false){$('status').textContent=message;$('status').dataset.error=String(error);}
 try{view=new FlowView($('field'));}catch(error){status(error.message,true);}
 async function command(...args){const answer=await window.nativeCommand(...args);if(answer.error)throw new Error(answer.error);return answer;}
+installMenu(native,command,status);
 function snapshot(s) {
   if(s.error){status(s.error,true);running=false;buttons();return;}
   if(s.particles?.length&&running){view?.accept(s.particles);sampleRate=s.particles[4];$('field-clock').textContent='t = '+s.particles[5].toFixed(2)+' s';$('empty').hidden=true;}

@@ -16,6 +16,10 @@ macOS can render grains with Metal. The browser runs the engine as WebAssembly
 and plays audio through an AudioWorklet. A Csound 7 opcode also supports
 granulation of sample tables.
 
+[Download the macOS app or Csound WASM plugin](https://github.com/hlolli/naviergrain/releases/latest).
+The app runs on Apple Silicon with macOS 13.3 or later. Downloads include
+checksums and a signed GitHub build record. The app is not Apple-notarized.
+
 ## Build
 
 For the macOS app, install CMake, Ninja, Python 3 and Bun. You also need
@@ -39,6 +43,7 @@ and miniaudio. Build options retain the older `FLUIDGRAIN_` prefix.
 
 Press **Evolve** to start. Drag the canvas to orbit, scroll to zoom, and drag
 a control to change its value. Double-click a control to reset it.
+The **Menu** button has About and, in the desktop app, Quit. Cmd–Q also quits on macOS.
 
 The live app has 256 grain voices. When those are busy, it skips new starts
 and shows the count. Dense settings still depend on the machine's audio budget.
