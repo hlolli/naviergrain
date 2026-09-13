@@ -71,6 +71,7 @@ node tests/test_live_worklet.mjs
 node tests/test_spectrogram.mjs
 node tests/test_particle_view.mjs
 node tests/test_trails_wasm.mjs build/ui/naviergrain-live.wasm
+node tests/test_live_controls.mjs build/ui/naviergrain-live.wasm
 node tests/test_live_wasm.mjs build/ui/naviergrain-live.wasm \
   build/native/naviergrain_live_test
 node tests/test_live_deadline.mjs build/ui/naviergrain-live.wasm 32000 500 1 1

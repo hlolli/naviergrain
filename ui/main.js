@@ -2,7 +2,7 @@ import schema from '../schema/naviergrain-v1.json';
 import {FlowView} from './flow.js';
 import {Spectrogram} from './spectrogram.js';
 import {BrowserRuntime} from './runtime.js';
-import {liveControls} from './live-controls.js';
+import {liveControls,liveControlGroups} from './live-controls.js';
 import {installMenu} from './menu.js';
 const $=id=>document.getElementById(id);
 const native=typeof window.nativeCommand==='function';
@@ -12,7 +12,7 @@ const spectrum=new Spectrogram($('spectrogram'));
 const stat=Object.fromEntries(schema.stat.map((s,i)=>[s.name,i]));
 const label={gain:'A — observation amplitude',grain_rate:'λ — particle injection rate',grain_ms:'τ — particle lifetime',position_center:'φ₀ — initial phase',position_span:'Δφ — phase dispersion',viscosity:'ν — kinematic viscosity',drive:'F — forcing amplitude',swirl:'Γ — rotational forcing',turbulence:'η — forcing fluctuations',eddy_size:'ℓ — forcing length scale',strain_drive:'σ — strain forcing',confinement:'κ — vorticity confinement',inertia_ms:'τₚ — particle response time',attraction:'χ — particle attraction',flow_speed:'s — evolution time scale',speed_to_density:'βλ — velocity coupling to injection',strain_to_duration:'βτ — velocity coupling to lifetime',mapping_mix:'μ — observation coupling'};
 const shortLabel=['A · amplitude','λ · injection','τ · lifetime',null,'φ₀ · phase','Δφ · dispersion',null,null,'ν · viscosity','F · forcing','Γ · rotation','η · fluctuations','ℓ · length scale','σ · strain','κ · confinement','τₚ · response','χ · attraction','s · time scale','βλ · injection','βτ · lifetime','μ · coupling'];
-const groups={fluid:[8,9,10,11,12,13,14,17],grains:[15,16,1,2,18,19],mapping:[0,4,5,20]};
+const groups=liveControlGroups;
 const format=(i,v)=>i===2||i===15?(v*.001).toFixed(3)+' s':i===1?v.toFixed(0)+' s⁻¹':i===4||i===5?(2*v).toFixed(2)+'π':i===8?v.toExponential(1):v.toFixed(2);
 function status(message,error=false){$('status').textContent=message;$('status').dataset.error=String(error);}
 try{view=new FlowView($('field'));}catch(error){status(error.message,true);}

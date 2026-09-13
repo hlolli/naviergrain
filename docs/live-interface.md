@@ -23,9 +23,15 @@ follow a Poisson process. The live app uses 512 emitters and 256 voice slots,
 with a rate control up to 32,000 starts per second. A full pool skips new
 starts and lets active grains finish. One voice is one grain.
 
+The default starts 700 grains per second with a 180 ms lifetime, gentler
+forcing and slower motion. Velocity can shorten that lifetime. This leaves
+room in the voice pool and lets individual tones stand out.
+
 Drag a control, use its arrow keys, or double-click to restore its default.
 The labels show field and particle coefficients. Observation amplitude A
 scales the output signal. It is separate from the fluid equation.
+Phase dispersion changes how grains combine. The shared initial phase has
+no slider: rotating every cosine together gives little audible change.
 
 The waveform and spectrogram use rendered audio. The spectrogram has a
 2,048-sample Hann window and 96 logarithmic bands. Its scroll rate follows
