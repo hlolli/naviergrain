@@ -97,7 +97,7 @@ jobs:
           cmake --build build/native --parallel 3
           # Hosted runners cannot qualify physical GPU/audio-device behavior.
           ctest --test-dir build/native --output-on-failure \
-            -R '^naviergrain\.(core|view|shuffle|grain_plan|extrema|fluid|resampler|provider|transport|packet_wire|package|schema)$'
+            -R '^naviergrain\.(live|core|view|shuffle|grain_plan|extrema|fluid|resampler|provider|transport|packet_wire|package|schema)$'
       - name: Package app
         run: |
           set -euo pipefail

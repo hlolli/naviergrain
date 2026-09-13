@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 3.16)
 set(_naviergrain_top_level OFF)
 if(CMAKE_SOURCE_DIR STREQUAL CMAKE_CURRENT_SOURCE_DIR)
-  project(naviergrain VERSION 0.1.0 LANGUAGES C)
+  project(naviergrain VERSION 0.2.0 LANGUAGES C)
   set(_naviergrain_top_level ON)
 endif()
 
