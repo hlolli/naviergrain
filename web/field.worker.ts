@@ -56,7 +56,7 @@ globalThis.onmessage = async ({data}: MessageEvent<
     const {libcsound} = await import(hostUrl) as {
       libcsound(options: {withPlugins: ArrayBuffer[]}): Promise<CsoundApi>
     };
-    const response = await fetch(new URL("./fluidgrain.wasm", import.meta.url));
+    const response = await fetch(new URL("./naviergrain.wasm", import.meta.url));
     if (!response.ok) throw new Error("Missing solver plugin");
     const api = await libcsound({withPlugins: [await response.arrayBuffer()]});
     if (stopped) return;

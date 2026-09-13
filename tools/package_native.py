@@ -28,14 +28,14 @@ LOCAL_VIDEO_TOOLS = {
 REQUIRED_SOURCE = (
     'CMakeLists.txt', 'README.md', 'LICENSE', 'COPYRIGHT',
     '.gitignore', '.clang-format', 'tokens.css',
-    'src/fluidgrain_opcode.c',
-    'src/fluidgrain_core.c', 'include/fluidgrain_schema.h',
-    'include/fluidgrain.inc', 'schema/fluidgrain-v1.json',
-    'include/naviergrain.inc', 'docs/build.md', 'tools/scheduler_plan.c',
+    'src/naviergrain_opcode.c',
+    'src/naviergrain_core.c', 'include/naviergrain_schema.h',
+    'include/naviergrain.inc', 'schema/naviergrain-v1.json',
+    'docs/build.md', 'tools/scheduler_plan.c',
 )
 SCENES = ('vortex-bloom', 'honey-drift', 'ion-blizzard', 'gravity-silk')
 AUDIO_FILES = (
-    'build/fluidgrain-diagnostic.wav', 'build/diagnostic.log',
+    'build/naviergrain-diagnostic.wav', 'build/diagnostic.log',
     *(f'build/spatial-comparisons/{name}-spatial-ab.{extension}'
       for name in SCENES for extension in ('wav', 'mp3')),
 )
@@ -47,8 +47,7 @@ def collect_files(root, module):
         paths.update(path.relative_to(root).as_posix() for path in root.glob(pattern))
     paths.difference_update(LOCAL_VIDEO_TOOLS)
     files = {name: root / name for name in paths}
-    if module.name not in ('libnaviergrain.so', 'libnaviergrain.dylib', 'naviergrain.dll',
-                           'libfluidgrain.so', 'libfluidgrain.dylib', 'fluidgrain.dll'):
+    if module.name not in ('libnaviergrain.so', 'libnaviergrain.dylib', 'naviergrain.dll'):
         raise ValueError('Select the production naviergrain module, not a diagnostic module')
     files[f'build/{module.name}'] = module
     for name, path in files.items():

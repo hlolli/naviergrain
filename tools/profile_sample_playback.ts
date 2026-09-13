@@ -8,12 +8,12 @@ import {resolve} from "node:path";
 import {parseArgs} from "node:util";
 import {GrainPlanHost} from "../web/grain-plan";
 import {bellSource, type CsoundApi} from "../web/engine";
-import {control, controlDefaults} from "../web/fluidgrain-schema";
+import {control, controlDefaults} from "../web/naviergrain-schema";
 
 const root = resolve(import.meta.dir, "..");
 const {values} = parseArgs({options: {
   before: {type: "string"},
-  after: {type: "string", default: resolve(root, "build/wasm/fluidgrain.wasm")},
+  after: {type: "string", default: resolve(root, "build/wasm/naviergrain.wasm")},
   output: {type: "string", default: resolve(root, "build/sample-playback")},
   seconds: {type: "string", default: "2"},
 }});

@@ -28,14 +28,14 @@ generated headers from a Csound 7 build:
 ```sh
 cmake -S . -B build/native -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DHLOLLI_CSOUND_BUILD_DIR=/path/to/csound/build \
-  -DFLUIDGRAIN_DESKTOP=ON -DFLUIDGRAIN_METAL=ON
+  -DNAVIERGRAIN_DESKTOP=ON -DNAVIERGRAIN_METAL=ON
 cmake --build build/native
 open build/native/naviergrain.app
 ```
 
 The app includes its interface and audio engine, so it runs without a web
 server or a separate Csound installation. The first build downloads webview
-and miniaudio. Build options retain the older `FLUIDGRAIN_` prefix.
+and miniaudio. Build options use the `NAVIERGRAIN_` prefix.
 
 [Build and test instructions](docs/build.md) cover the browser and Csound plugin.
 

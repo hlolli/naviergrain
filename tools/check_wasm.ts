@@ -11,7 +11,7 @@ const root = resolve(import.meta.dir, "..");
 const { values } = parseArgs({ options: {
   workbench: { type: "string", default: resolve(root, "../csound-wasm-plugin-compiler") },
   csound: { type: "string", default: resolve(root, "../csound/build/csound") },
-  module: { type: "string", default: resolve(root, "build/libfluidgrain.so") },
+  module: { type: "string", default: resolve(root, "build/libnaviergrain.so") },
   output: { type: "string", default: resolve(root, "build/wasm") },
 } });
 const workbench = resolve(values.workbench!);
@@ -22,13 +22,13 @@ const importFile = (path: string) => import(pathToFileURL(resolve(workbench, pat
 const { compilePlugin, initializeCompiler } = await importFile("src/compiler/compile.ts");
 const { extractCsoundHeaders } = await importFile("src/compiler/sdk-archive.ts");
 const sdk = await readFile(resolve(workbench, "node_modules/@csound/wasm-bin/lib/csound-plugin-sdk.tar.gz"));
-const source = await readFile(resolve(root, "build/fluidgrain.c"), "utf8");
+const source = await readFile(resolve(root, "build/naviergrain.c"), "utf8");
 await initializeCompiler(() => {});
 const compiled = await compilePlugin(source, "c", extractCsoundHeaders(Bun.gunzipSync(sdk)));
 await writeFile(resolve(output, "compiler.log"), compiled.output);
 assert(compiled.ok && compiled.wasm, JSON.stringify(compiled));
 const wasm: ArrayBuffer = compiled.wasm;
-await writeFile(resolve(output, "fluidgrain.wasm"), new Uint8Array(wasm));
+await writeFile(resolve(output, "naviergrain.wasm"), new Uint8Array(wasm));
 
 interface BrowserApi {
   csoundCreate(): number;
@@ -54,7 +54,7 @@ const factory = new Function(entry.replace(marker, "return __lcs__;"))() as
   (options: { withPlugins: ArrayBuffer[] }) => Promise<BrowserApi>;
 const api = await factory({ withPlugins: [wasm] });
 const csound = api.csoundCreate();
-const schema = await readFile(resolve(root, "include/fluidgrain.inc"), "utf8");
+const schema = await readFile(resolve(root, "include/naviergrain.inc"), "utf8");
 
 function probe(block: number, sourceRatio: number): string {
   return `<CsoundSynthesizer>
@@ -69,13 +69,13 @@ nchnls = 2
 ${schema}
 instr 1
 iSource ftgen 0, 0, -997, 10, 1, .2, .1
-iConfig[] fillarray $FG_CONFIG_DEFAULTS
-iConfig[$FG_CONFIG_SOURCE_LOOP] = 1
-iConfig[$FG_CONFIG_SEED] = 0
-kControl[] fillarray $FG_CONTROL_DEFAULTS
-kControl[$FG_CONTROL_GRAIN_RATE] init 600
-kControl[$FG_CONTROL_SCHEDULER] init 0
-aL, aR, kStats[] fluidgrain iSource, sr * ${sourceRatio}, iConfig, kControl
+iConfig[] fillarray $NG_CONFIG_DEFAULTS
+iConfig[$NG_CONFIG_SOURCE_LOOP] = 1
+iConfig[$NG_CONFIG_SEED] = 0
+kControl[] fillarray $NG_CONTROL_DEFAULTS
+kControl[$NG_CONTROL_GRAIN_RATE] init 600
+kControl[$NG_CONTROL_SCHEDULER] init 0
+aL, aR, kStats[] naviergrain iSource, sr * ${sourceRatio}, iConfig, kControl
 outs aL, aR
 endin
 </CsInstruments>

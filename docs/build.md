@@ -11,7 +11,7 @@ when you enable the desktop target.
 cmake -S . -B build/native -G Ninja -DCMAKE_BUILD_TYPE=Release \
   -DHLOLLI_CSOUND_BUILD_DIR=/path/to/csound/build \
   -DCSOUND_EXECUTABLE=/path/to/csound/build/csound \
-  -DFLUIDGRAIN_DESKTOP=ON -DFLUIDGRAIN_METAL=ON
+  -DNAVIERGRAIN_DESKTOP=ON -DNAVIERGRAIN_METAL=ON
 cmake --build build/native
 ctest --test-dir build/native --output-on-failure
 ```
@@ -20,9 +20,9 @@ On macOS, open `build/native/naviergrain.app`. The app embeds its UI and
 synthesizer. Csound is needed to build and test the plugin, but the app's
 audio host uses miniaudio directly.
 
-`FLUIDGRAIN_METAL` requires macOS. On Linux, omit that option and install the
+`NAVIERGRAIN_METAL` requires macOS. On Linux, omit that option and install the
 GTK/WebKitGTK development packages required by webview. Windows uses WebView2
-and needs `FLUIDGRAIN_NATIVE_WORKER=OFF` for the CPU desktop path, since the
+and needs `NAVIERGRAIN_NATIVE_WORKER=OFF` for the CPU desktop path, since the
 native worker currently uses POSIX threads. Only macOS arm64 has been tested
 as a desktop app.
 
@@ -62,7 +62,7 @@ app. The workbench source and tests remain for further development.
 
 CMake registers the native tests for the backends and Csound libraries it finds.
 For address and undefined-behavior checks with Clang or GCC, use a separate
-build directory and `-DFLUIDGRAIN_SANITIZE=ON`.
+build directory and `-DNAVIERGRAIN_SANITIZE=ON`.
 
 After building the live WASM and native app:
 
@@ -70,15 +70,15 @@ After building the live WASM and native app:
 node tests/test_live_worklet.mjs
 node tests/test_spectrogram.mjs
 node tests/test_particle_view.mjs
-node tests/test_trails_wasm.mjs build/ui/fluidgrain-live.wasm
-node tests/test_live_wasm.mjs build/ui/fluidgrain-live.wasm \
-  build/native/fluidgrain_live_test
-node tests/test_live_deadline.mjs build/ui/fluidgrain-live.wasm 32000 500 1 1
+node tests/test_trails_wasm.mjs build/ui/naviergrain-live.wasm
+node tests/test_live_wasm.mjs build/ui/naviergrain-live.wasm \
+  build/native/naviergrain_live_test
+node tests/test_live_deadline.mjs build/ui/naviergrain-live.wasm 32000 500 1 1
 ```
 
 The last check measures queue pressure in Node. Test with an audio device too.
 
-The opcode's parameter definitions live in `schema/fluidgrain-v1.json`.
+The opcode's parameter definitions live in `schema/naviergrain-v1.json`.
 After editing them, run `python3 tools/generate_schema.py`. Use `--check`
 to check the generated C, Csound and TypeScript files without changing them.
 

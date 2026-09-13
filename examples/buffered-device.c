@@ -1,7 +1,7 @@
 #define _POSIX_C_SOURCE 200809L
 #include <csound.h>
 #include <csound_rtaudio.h>
-#include "fluidgrain_buffered.h"
+#include "naviergrain_buffered.h"
 #include <dlfcn.h>
 #include <errno.h>
 #include <math.h>
@@ -54,10 +54,10 @@ static int list_devices(CSOUND *h,const char *requested) {
   free(devices);return found&&matched?0:1;
 }
 static int compile(CSOUND *h) {
-  double config[FG_CONFIG_COUNT],controls[FG_CONTROL_COUNT];
-  fg_defaults(config,controls);
+  double config[NG_CONFIG_COUNT],controls[NG_CONTROL_COUNT];
+  ng_defaults(config,controls);
   char defaults[2048];size_t used=0;
-  for(unsigned i=0;i<FG_CONTROL_COUNT;++i) {
+  for(unsigned i=0;i<NG_CONTROL_COUNT;++i) {
     int n=snprintf(defaults+used,sizeof(defaults)-used,"%s%.17g",i?",":"",controls[i]);
     if(n<0||(size_t)n>=sizeof(defaults)-used)return 1;
     used+=(size_t)n;
@@ -69,13 +69,13 @@ static int compile(CSOUND *h) {
     "instr 1\nkControl[] fillarray %s\n"
     "kControl[%u] init .04\nkControl[%u] init 600\nkControl[%u] init 80\n"
     "kEnable chnget \"enable\"\nkMode chnget \"mode\"\n"
-    "aL,aR,kStats[],kGPU,kUnder,kQueued,kPlayed fluidgrain_buffered 1,kControl,kEnable,kMode\n"
+    "aL,aR,kStats[],kGPU,kUnder,kQueued,kPlayed naviergrain_buffered 1,kControl,kEnable,kMode\n"
     "chnset kGPU,\"gpu\"\nchnset kUnder,\"under\"\n"
     "chnset kQueued,\"queued\"\nchnset kPlayed,\"played\"\n"
     "chnset kStats[%u],\"voices\"\nchnset kStats[%u],\"drops\"\n"
     "outs aL,aR\nendin\n</CsInstruments>\n<CsScore>\ni 1 0 -1\nf 0 z\n"
-    "</CsScore>\n</CsoundSynthesizer>\n",defaults,FG_CONTROL_GAIN,
-    FG_CONTROL_GRAIN_RATE,FG_CONTROL_GRAIN_MS,FG_STAT_LIVE_GRAINS,FG_STAT_VOICE_DROPS);
+    "</CsScore>\n</CsoundSynthesizer>\n",defaults,NG_CONTROL_GAIN,
+    NG_CONTROL_GRAIN_RATE,NG_CONTROL_GRAIN_MS,NG_STAT_LIVE_GRAINS,NG_STAT_VOICE_DROPS);
   if(n<0||(size_t)n>=sizeof(csd))return 1;
   return csoundCompileCSD(h,csd,1,0)!=0;
 }
@@ -102,8 +102,8 @@ int main(int argc,char **argv) {
   if(!listing&&!module)goto bad_usage;
   if(strncmp(output,"dac",3)){fprintf(stderr,"--output must select a Csound DAC device.\n");return 2;}
   if(csoundInitialize(CSOUNDINIT_NO_SIGNAL_HANDLER|CSOUNDINIT_NO_ATEXIT))return 1;
-  int result=1;void *library=NULL;FGBuffered *buffer=NULL;
-  const FGNativeBufferedAPI *api=NULL;
+  int result=1;void *library=NULL;NGBuffered *buffer=NULL;
+  const NGNativeBufferedAPI *api=NULL;
   CSOUND *h=csoundCreate(NULL,NULL);if(!h)return 1;
   if(option(h,"-+rtaudio=",backend))goto cleanup;
   csoundSetRTAudioModule(h,backend);
@@ -116,17 +116,17 @@ int main(int argc,char **argv) {
   }
   library=dlopen(module,RTLD_NOW|RTLD_LOCAL);
   if(!library){fprintf(stderr,"Cannot load plugin: %s\n",dlerror());goto cleanup;}
-  const FGNativeBufferedAPI *(*entry)(void)=NULL;
-  void *symbol=dlsym(library,"fluidgrain_native_buffered_api");
+  const NGNativeBufferedAPI *(*entry)(void)=NULL;
+  void *symbol=dlsym(library,"naviergrain_native_buffered_api");
   if(!symbol)goto cleanup;
   memcpy(&entry,&symbol,sizeof(entry));api=entry();
   if(!api||api->version!=1)goto cleanup;
   if(option(h,"--opcode-lib=",module)||option(h,"-o",output)||
      csoundSetOption(h,"-d")||csoundSetOption(h,"-m0")||
      csoundSetOption(h,"-b256")||csoundSetOption(h,"-B1024")||compile(h))goto cleanup;
-  double values[FG_CONFIG_COUNT],controls[FG_CONTROL_COUNT],source[4096];
-  fg_defaults(values,controls);FGConfig config;
-  if(fg_config_parse(&config,values,FG_CONFIG_COUNT))goto cleanup;
+  double values[NG_CONFIG_COUNT],controls[NG_CONTROL_COUNT],source[4096];
+  ng_defaults(values,controls);NGConfig config;
+  if(ng_config_parse(&config,values,NG_CONFIG_COUNT))goto cleanup;
   for(unsigned i=0;i<4096;++i)source[i]=.2*sin(6.283185307179586*(double)i/37);
   buffer=api->create(&config,source,4096,48000,48000,512,device);
   if(!buffer||!api->register_buffer(h,1,buffer))goto cleanup;
@@ -180,9 +180,9 @@ cleanup:
 bad_usage:
   fprintf(stderr,"Invalid arguments; use --help.\n");return 2;
 usage:
-  puts("fluidgrain_device_host --module /path/to/plugin [--backend " DEFAULT_BACKEND "] [--output dac]\n"
+  puts("naviergrain_device_host --module /path/to/plugin [--backend " DEFAULT_BACKEND "] [--output dac]\n"
        "  [--seconds 10] [--cpu | --cpu-after 5]\n"
-       "fluidgrain_device_host [--backend " DEFAULT_BACKEND "] --list-devices\n"
+       "naviergrain_device_host [--backend " DEFAULT_BACKEND "] --list-devices\n"
        "Ctrl-C stops submission and drains queued audio. GPU rendering is optional; CPU recovers failures.");
   return 0;
 }

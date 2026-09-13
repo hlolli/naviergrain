@@ -40,7 +40,7 @@ jobs:
           if [[ "$GITHUB_REF_TYPE" == tag ]]; then tag="$GITHUB_REF_NAME"; fi
           if [[ -n "$tag" ]]; then
             [[ "$tag" =~ ^v[0-9]+\.[0-9]+\.[0-9]+$ ]]
-            version=$(sed -n 's/.*project(fluidgrain VERSION \([^ ]*\).*/\1/p' CMakeLists.txt)
+            version=$(sed -n 's/.*project(naviergrain VERSION \([^ ]*\).*/\1/p' CMakeLists.txt)
             [[ "$tag" == "v$version" ]]
             existing=$(git ls-remote --tags origin "refs/tags/$tag" "refs/tags/$tag^{}" | tail -1 | cut -f1)
             if [[ -n "$existing" && "$existing" != "$GITHUB_SHA" ]]; then
@@ -93,11 +93,11 @@ jobs:
           cmake -S . -B build/native -G Ninja -DCMAKE_BUILD_TYPE=Release \
             -DHLOLLI_CSOUND_INCLUDE_DIR="$PWD/build/csound-headers" \
             -DCMAKE_OSX_ARCHITECTURES=arm64 -DCMAKE_OSX_DEPLOYMENT_TARGET=13.3 \
-            -DFLUIDGRAIN_DESKTOP=ON -DFLUIDGRAIN_METAL=ON
+            -DNAVIERGRAIN_DESKTOP=ON -DNAVIERGRAIN_METAL=ON
           cmake --build build/native --parallel 3
           # Hosted runners cannot qualify physical GPU/audio-device behavior.
           ctest --test-dir build/native --output-on-failure \
-            -R '^fluidgrain\.(core|view|shuffle|grain_plan|extrema|fluid|resampler|provider|transport|packet_wire|package|schema)$'
+            -R '^naviergrain\.(core|view|shuffle|grain_plan|extrema|fluid|resampler|provider|transport|packet_wire|package|schema)$'
       - name: Package app
         run: |
           set -euo pipefail
@@ -166,7 +166,7 @@ jobs:
           set -euo pipefail
           mkdir -p build/assets build/wasm-package/include build/wasm-package/examples
           cp build/plugin/lib/naviergrain.wasm build/wasm-package/
-          cp include/{naviergrain,fluidgrain}.inc build/wasm-package/include/
+          cp include/naviergrain.inc build/wasm-package/include/
           cp examples/naviergrain.csd build/wasm-package/examples/
           cp LICENSE COPYRIGHT build/wasm-package/
           cp -R build/plugin/licenses build/wasm-package/

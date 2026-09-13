@@ -18,15 +18,15 @@ static void shuffle_column(void *rows, size_t stride, size_t offset,
   }
 }
 
-static void shuffle_mappings(FGEngine *e) {
-  const uint32_t seed = (uint32_t)e->config.value[FG_CONFIG_SEED];
+static void shuffle_mappings(NGEngine *e) {
+  const uint32_t seed = (uint32_t)e->config.value[NG_CONFIG_SEED];
   const size_t emitter_columns[] = {
-      offsetof(FGParticle, x), offsetof(FGParticle, y),
-      offsetof(FGParticle, omega), offsetof(FGParticle, strain)};
+      offsetof(NGParticle, x), offsetof(NGParticle, y),
+      offsetof(NGParticle, omega), offsetof(NGParticle, strain)};
   memcpy(e->mapping_emitters, e->emitters,
-         e->emitter_count * sizeof(FGEmitter));
+         e->emitter_count * sizeof(NGEmitter));
   for (uint32_t i = 0; i < 4; ++i)
-    shuffle_column(e->mapping_emitters, sizeof(FGEmitter), emitter_columns[i],
+    shuffle_column(e->mapping_emitters, sizeof(NGEmitter), emitter_columns[i],
                    NULL, e->emitter_count,
                    seed ^ (UINT32_C(0x3c6ef372) + i * UINT32_C(0x9e3779b9)));
 
@@ -37,11 +37,11 @@ static void shuffle_mappings(FGEngine *e) {
     e->voices[i].mapping = e->voices[i].particle;
     e->mapping_indices[live++] = i;
   }
-  const size_t voice_columns[] = {offsetof(FGParticle, y),
-                                  offsetof(FGParticle, omega)};
+  const size_t voice_columns[] = {offsetof(NGParticle, y),
+                                  offsetof(NGParticle, omega)};
   for (uint32_t i = 0; i < 2; ++i)
-    shuffle_column(e->voices, sizeof(FGVoice),
-                   offsetof(FGVoice, mapping) + voice_columns[i],
+    shuffle_column(e->voices, sizeof(NGVoice),
+                   offsetof(NGVoice, mapping) + voice_columns[i],
                    e->mapping_indices, live,
                    seed ^ (UINT32_C(0xa54ff53a) + i * UINT32_C(0x9e3779b9)));
 }

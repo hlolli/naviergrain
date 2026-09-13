@@ -22,7 +22,7 @@ const save = () => writeFile(path, JSON.stringify(receipt, null, 2) + '\n');
 await save();let browser;
 try {
   for (const file of ['tools/grain_benchmark.c', 'tools/grain_benchmark.wgsl', 'tools/grain_benchmark.worker.js',
-    'tools/compare_grains.mjs', 'src/fluidgrain_resampler.c', 'src/fluidgrain_resampler.h',
+    'tools/compare_grains.mjs', 'src/naviergrain_resampler.c', 'src/naviergrain_resampler.h',
     'build/grain_benchmark', ...['cpu.json', 'input.f32', 'voices.f32'].map(n => `${values.input}/${n}`)]) {
     const content = await readFile(file);
     receipt.hashes[file] = createHash('sha256').update(content).digest('hex');

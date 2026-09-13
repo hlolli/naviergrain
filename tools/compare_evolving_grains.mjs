@@ -13,7 +13,7 @@ const receipt={status:'running',started:new Date().toISOString(),cpu:cpus()[0].m
 const save=()=>writeFile(resolve(values.output,'receipt.json'),JSON.stringify(receipt,null,2)+'\n');
 await save();let browser,pending=Promise.resolve();
 try {
-  for(const file of ['tools/evolving_grains.c','tools/grain_benchmark.c','src/fluidgrain_resampler.c','src/fluidgrain_resampler.h',
+  for(const file of ['tools/evolving_grains.c','tools/grain_benchmark.c','src/naviergrain_resampler.c','src/naviergrain_resampler.h',
     'tools/evolving_grains.wgsl','tools/evolving_grains.js','tools/evolving_grains.worker.js','tools/compare_evolving_grains.mjs','build/evolving_grains',
     ...['evolving.json','input.f32',...[32,256,1024].flatMap(n=>[`plan-${n}.f32`,`reference-${n}.f64`,`continuous-${n}.f64`])].map(f=>`${values.input}/${f}`)]) {
     const bytes=await readFile(file);receipt.hashes[file]=createHash('sha256').update(bytes).digest('hex');

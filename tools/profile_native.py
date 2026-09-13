@@ -51,7 +51,7 @@ def resident_bytes():
 
 def source_hashes():
     paths = [*ROOT.glob('src/*.[ch]'), *ROOT.glob('include/*'),
-             ROOT / 'schema/fluidgrain-v1.json',
+             ROOT / 'schema/naviergrain-v1.json',
              ROOT / 'CMakeLists.txt', ROOT / 'tests/profile_hooks.c', Path(__file__)]
     return {str(p.relative_to(ROOT)): hashlib.sha256(p.read_bytes()).hexdigest()
             for p in sorted(paths)}
@@ -62,7 +62,7 @@ def build_metadata(module):
     if not cache.exists():
         return None
     keys = {'CMAKE_C_COMPILER', 'CMAKE_BUILD_TYPE', 'CMAKE_C_FLAGS',
-            'CMAKE_C_FLAGS_RELWITHDEBINFO', 'CMAKE_C_FLAGS_RELEASE', 'FLUIDGRAIN_SANITIZE'}
+            'CMAKE_C_FLAGS_RELWITHDEBINFO', 'CMAKE_C_FLAGS_RELEASE', 'NAVIERGRAIN_SANITIZE'}
     values = {}
     for line in cache.read_text().splitlines():
         key = line.split(':', 1)[0]
@@ -82,7 +82,7 @@ def main():
     signal.signal(signal.SIGTERM, interrupted)
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument('--library', type=Path, default=ROOT.parent / 'csound/build/libcsound64.so.7.0')
-    parser.add_argument('--module', type=Path, default=ROOT / 'build/libfluidgrain.so')
+    parser.add_argument('--module', type=Path, default=ROOT / 'build/libnaviergrain.so')
     parser.add_argument('--seconds', type=float, default=2)
     parser.add_argument('--sample-rate', type=int, choices=(44100, 48000, 96000), default=48000)
     parser.add_argument('--block', type=int, default=64)
@@ -91,7 +91,7 @@ def main():
     parser.add_argument('--profiles', nargs='+', choices=('low', 'normal', 'dense'),
                         default=['low', 'normal', 'dense'])
     parser.add_argument('--instrumented', action='store_true',
-                        help='Require the non-installed libfluidgrain_profile module for solver/allocation counters')
+                        help='Require the non-installed libnaviergrain_profile module for solver/allocation counters')
     parser.add_argument('--progress-seconds', type=float, default=30,
                         help='Wall-clock checkpoint interval; writes partial report and prints progress')
     parser.add_argument('--output', type=Path, default=ROOT / 'build/callback-profile.json')
@@ -106,8 +106,8 @@ def main():
     probe_values = (C.c_double * 6)()
     if args.instrumented:
         probe = C.CDLL(str(args.module.resolve()))
-        probe.fg_profile_begin.argtypes, probe.fg_profile_begin.restype = [], None
-        probe.fg_profile_end.argtypes, probe.fg_profile_end.restype = [C.POINTER(C.c_double)], None
+        probe.ng_profile_begin.argtypes, probe.ng_profile_begin.restype = [], None
+        probe.ng_profile_end.argtypes, probe.ng_profile_end.restype = [C.POINTER(C.c_double)], None
     lib = C.CDLL(str(args.library.resolve()))
     pointer = C.c_void_p
     signatures = {
@@ -189,10 +189,10 @@ def main():
             option = f'--opcode-lib={args.module.resolve()}'.encode()
             if lib.csoundSetOption(host, option):
                 raise RuntimeError('Could not select the plugin')
-            reader = 'aL, aR, kStats[] fluidgrain iSource, sr, iConfig, kControl'
+            reader = 'aL, aR, kStats[] naviergrain iSource, sr, iConfig, kControl'
             if args.prepared:
                 reader = ('kRun chnget "run"\n'
-                          'aL, aR, kStats[] FluidGrainPrepared iSource, sr, iConfig, kControl, kRun')
+                          'aL, aR, kStats[] NaviergrainPrepared iSource, sr, iConfig, kControl, kRun')
             csd = f"""<CsoundSynthesizer>
 <CsOptions>
 -n -d -m0
@@ -202,30 +202,30 @@ sr = {args.sample_rate}
 ksmps = {args.block}
 nchnls = 2
 0dbfs = 1
-#include "{ROOT / 'include/fluidgrain.inc'}"
-#include "{ROOT / 'include/fluidgrain-prepared.inc'}"
+#include "{ROOT / 'include/naviergrain.inc'}"
+#include "{ROOT / 'include/naviergrain-prepared.inc'}"
 instr 1
 iSource ftgen 0, 0, -997, 10, 1, .2, .1
-iConfig[] fillarray $FG_CONFIG_DEFAULTS
-iConfig[$FG_CONFIG_GRID_SIZE] = {grid}
-iConfig[$FG_CONFIG_EMITTER_COUNT] = {emitters}
-iConfig[$FG_CONFIG_MAX_GRAINS] = {voices}
-iConfig[$FG_CONFIG_PRESSURE_ITERATIONS] = {pressure}
-iConfig[$FG_CONFIG_SOURCE_LOOP] = 1
-kControl[] fillarray $FG_CONTROL_DEFAULTS
-kControl[$FG_CONTROL_GRAIN_RATE] init {rate}
-kControl[$FG_CONTROL_GRAIN_MS] init {grain_ms}
-kControl[$FG_CONTROL_GAIN] init .03
+iConfig[] fillarray $NG_CONFIG_DEFAULTS
+iConfig[$NG_CONFIG_GRID_SIZE] = {grid}
+iConfig[$NG_CONFIG_EMITTER_COUNT] = {emitters}
+iConfig[$NG_CONFIG_MAX_GRAINS] = {voices}
+iConfig[$NG_CONFIG_PRESSURE_ITERATIONS] = {pressure}
+iConfig[$NG_CONFIG_SOURCE_LOOP] = 1
+kControl[] fillarray $NG_CONTROL_DEFAULTS
+kControl[$NG_CONTROL_GRAIN_RATE] init {rate}
+kControl[$NG_CONTROL_GRAIN_MS] init {grain_ms}
+kControl[$NG_CONTROL_GAIN] init .03
 {reader}
-chnset kStats[$FG_STAT_STATUS], "status"
-chnset kStats[$FG_STAT_SOURCE_LENGTH], "source_length"
-chnset kStats[$FG_STAT_FIELD_AGE_MS], "age"
-chnset kStats[$FG_STAT_SNAPSHOT_SEQUENCE], "sequence"
-chnset kStats[$FG_STAT_LIVE_GRAINS], "live"
-chnset kStats[$FG_STAT_NUMERIC_INTERVENTIONS], "numeric"
-chnset kStats[$FG_STAT_VOICE_DROPS], "drops"
-chnset kStats[$FG_STAT_KINETIC_ENERGY], "energy"
-chnset kStats[$FG_STAT_RMS_DIVERGENCE], "divergence"
+chnset kStats[$NG_STAT_STATUS], "status"
+chnset kStats[$NG_STAT_SOURCE_LENGTH], "source_length"
+chnset kStats[$NG_STAT_FIELD_AGE_MS], "age"
+chnset kStats[$NG_STAT_SNAPSHOT_SEQUENCE], "sequence"
+chnset kStats[$NG_STAT_LIVE_GRAINS], "live"
+chnset kStats[$NG_STAT_NUMERIC_INTERVENTIONS], "numeric"
+chnset kStats[$NG_STAT_VOICE_DROPS], "drops"
+chnset kStats[$NG_STAT_KINETIC_ENERGY], "energy"
+chnset kStats[$NG_STAT_RMS_DIVERGENCE], "divergence"
 outs aL, aR
 endin
 </CsInstruments>
@@ -258,12 +258,12 @@ i 1 0 {-1 if args.prepared else args.seconds}
             maximum_calls = math.ceil(args.seconds * args.sample_rate / args.block) + 2
             for _ in range(maximum_calls):
                 if probe:
-                    probe.fg_profile_begin()
+                    probe.ng_profile_begin()
                 start = time.perf_counter_ns()
                 status = lib.csoundPerformKsmps(host)
                 elapsed = (time.perf_counter_ns() - start) / 1e6
                 if probe:
-                    probe.fg_profile_end(probe_values)
+                    probe.ng_profile_end(probe_values)
                     if probe_values[5]:
                         raise RuntimeError('Solver monotonic clock failed')
                     solver_steps += int(probe_values[0])

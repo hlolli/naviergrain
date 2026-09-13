@@ -2,7 +2,7 @@
  * No device is opened: preparation and teardown belong to the stopped host.
  * This test proves state/ownership, not hardware callback deadlines. */
 #include <csound.h>
-#include "fluidgrain_schema.h"
+#include "naviergrain_schema.h"
 #include <math.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -55,34 +55,34 @@ static void prepare(CSOUND *host, const char *module, unsigned block,
   CHECK(host, csoundGetKsmps(host) == block);
   for (unsigned i = 0; i < preroll; ++i) {
     quiet_block(host);
-    CHECK(host, channel(host, "fg.status") == FG_STATUS_READY);
-    CHECK(host, channel(host, "fg.source_length") == 997);
-    CHECK(host, channel(host, "fg.live") == 0);
-    CHECK(host, channel(host, "fg.sequence") == 0);
-    CHECK(host, channel(host, "fg.age") == 0);
+    CHECK(host, channel(host, "ng.status") == NG_STATUS_READY);
+    CHECK(host, channel(host, "ng.source_length") == 997);
+    CHECK(host, channel(host, "ng.live") == 0);
+    CHECK(host, channel(host, "ng.sequence") == 0);
+    CHECK(host, channel(host, "ng.age") == 0);
   }
-  csoundSetControlChannel(host, "fg.rate", 80);
-  csoundSetControlChannel(host, "fg.gain", .03);
-  csoundSetControlChannel(host, "fg.pitch", 1);
-  csoundSetControlChannel(host, "fg.run", 1);
+  csoundSetControlChannel(host, "ng.rate", 80);
+  csoundSetControlChannel(host, "ng.gain", .03);
+  csoundSetControlChannel(host, "ng.pitch", 1);
+  csoundSetControlChannel(host, "ng.run", 1);
 }
 static void automation(CSOUND *host, unsigned block) {
-  csoundSetControlChannel(host, "fg.freeze", block >= 50 && block < 90);
-  csoundSetControlChannel(host, "fg.reset", block >= 150 && block < 190);
-  csoundSetControlChannel(host, "fg.pitch", block < 100 ? 1 : 1.5);
+  csoundSetControlChannel(host, "ng.freeze", block >= 50 && block < 90);
+  csoundSetControlChannel(host, "ng.reset", block >= 150 && block < 190);
+  csoundSetControlChannel(host, "ng.pitch", block < 100 ? 1 : 1.5);
 }
 static void pause_transport(CSOUND *host) {
-  const char *names[] = {"fg.status", "fg.live", "fg.sequence", "fg.age", "fg.epoch"};
+  const char *names[] = {"ng.status", "ng.live", "ng.sequence", "ng.age", "ng.epoch"};
   double before[5];
   for (unsigned i = 0; i < 5; ++i)
     before[i] = channel(host, names[i]);
-  csoundSetControlChannel(host, "fg.run", 0);
+  csoundSetControlChannel(host, "ng.run", 0);
   for (unsigned block = 0; block < 13; ++block) {
     quiet_block(host);
     for (unsigned i = 0; i < 5; ++i)
       CHECK(host, channel(host, names[i]) == before[i]);
   }
-  csoundSetControlChannel(host, "fg.run", 1);
+  csoundSetControlChannel(host, "ng.run", 1);
 }
 static void stopped_reset(CSOUND *host) {
   /* The caller has stopped invoking performance; no audio thread or worker
@@ -96,7 +96,7 @@ static void invalid_automation(CSOUND *reference, CSOUND *faulted,
                                const char *module) {
   prepare(reference, module, 37, 48000, 1);
   prepare(faulted, module, 37, 48000, 1);
-  const char *names[] = {"fg.gain", "fg.rate", "fg.pitch", "fg.freeze", "fg.reset"};
+  const char *names[] = {"ng.gain", "ng.rate", "ng.pitch", "ng.freeze", "ng.reset"};
   const double initial[] = {.03, 80, 1, 0, 0};
   const double minimum[] = {0, 0, .25, 0, 0};
   const double maximum[] = {2, 32000, 4, 1, 1};
@@ -121,15 +121,15 @@ static void invalid_automation(CSOUND *reference, CSOUND *faulted,
           energy += b[i] * b[i];
         }
       }
-      CHECK(faulted, (unsigned)channel(faulted, "fg.status") &
-                         FG_STATUS_CONTROLS_CLAMPED);
-      CHECK(faulted, channel(faulted, "fg.numeric") == 0);
+      CHECK(faulted, (unsigned)channel(faulted, "ng.status") &
+                         NG_STATUS_CONTROLS_CLAMPED);
+      CHECK(faulted, channel(faulted, "ng.numeric") == 0);
     }
     csoundSetControlChannel(reference, names[channel_index], initial[channel_index]);
     csoundSetControlChannel(faulted, names[channel_index], initial[channel_index]);
   }
   CHECK(faulted, energy > 0);
-  CHECK(faulted, channel(faulted, "fg.epoch") == 0);
+  CHECK(faulted, channel(faulted, "ng.epoch") == 0);
   stopped_reset(reference);
   stopped_reset(faulted);
   puts("prepared host: 30 invalid/endpoint automation cases match sanitized controls exactly");
@@ -139,14 +139,14 @@ static void failed_preparation(CSOUND *host, const char *module, int source_faul
   const char *csd =
       "<CsoundSynthesizer>\n<CsOptions>\n-n -d -m0\n</CsOptions>\n"
       "<CsInstruments>\nsr=48000\nksmps=64\nnchnls=2\n0dbfs=1\n"
-      "#include \"include/fluidgrain.inc\"\n"
-      "#include \"include/fluidgrain-prepared.inc\"\n"
+      "#include \"include/naviergrain.inc\"\n"
+      "#include \"include/naviergrain-prepared.inc\"\n"
       "giSource ftgen 123,0,-997,10,1\n"
       "instr 1\niRate chnget \"failed.rate\"\n"
-      "iConfig[] fillarray $FG_CONFIG_DEFAULTS\n"
-      "kControl[] fillarray $FG_CONTROL_DEFAULTS\n"
-      "aL,aR,kStats[] FluidGrainPrepared giSource,iRate,iConfig,kControl,0\n"
-      "chnset kStats[$FG_STAT_STATUS],\"failed.status\"\n"
+      "iConfig[] fillarray $NG_CONFIG_DEFAULTS\n"
+      "kControl[] fillarray $NG_CONTROL_DEFAULTS\n"
+      "aL,aR,kStats[] NaviergrainPrepared giSource,iRate,iConfig,kControl,0\n"
+      "chnset kStats[$NG_STAT_STATUS],\"failed.status\"\n"
       "outs aL,aR\nendin\n</CsInstruments>\n"
       "<CsScore>\ni 1 0 -1\nf 0 z\n</CsScore>\n</CsoundSynthesizer>\n";
   CHECK(host, csoundCompileCSD(host, csd, 1, 0) == 0);
@@ -180,15 +180,15 @@ static void observation_host(CSOUND *host, const char *module, int observed, int
   snprintf(csd, sizeof(csd),
     "<CsoundSynthesizer>\n<CsOptions>\n-n -d -m0\n</CsOptions>\n<CsInstruments>\n"
     "sr=48000\nksmps=64\nnchnls=2\n0dbfs=1\n"
-    "#include \"include/fluidgrain.inc\"\n#include \"include/fluidgrain-prepared.inc\"\n"
+    "#include \"include/naviergrain.inc\"\n#include \"include/naviergrain-prepared.inc\"\n"
     "giSource ftgen 1,0,-997,10,1\ngiView ftgen 2,0,-%d,-2,0\n"
-    "instr 1\niCfg[] fillarray $FG_CONFIG_DEFAULTS\nkCtl[] fillarray $FG_CONTROL_DEFAULTS\n"
+    "instr 1\niCfg[] fillarray $NG_CONFIG_DEFAULTS\nkCtl[] fillarray $NG_CONTROL_DEFAULTS\n"
     "kRun chnget \"view.run\"\nkObserve chnget \"view.request\"\n"
-    "kCtl[$FG_CONTROL_RESET] chnget \"view.reset\"\n"
+    "kCtl[$NG_CONTROL_RESET] chnget \"view.reset\"\n"
     "aL,aR,kStats[] %s giSource,48000,iCfg,kCtl,kRun%s\n"
-    "chnset kStats[$FG_STAT_STATUS],\"view.status\"\nouts aL,aR\nendin\n"
+    "chnset kStats[$NG_STAT_STATUS],\"view.status\"\nouts aL,aR\nendin\n"
     "</CsInstruments>\n<CsScore>\ni 1 0 -1\nf 0 z\n</CsScore>\n</CsoundSynthesizer>\n",
-    size, observed ? "FluidGrainVisualPrepared" : "FluidGrainPrepared",
+    size, observed ? "NaviergrainVisualPrepared" : "NaviergrainPrepared",
     observed ? (table == 1 ? ",1,kObserve" : ",giView,kObserve") : "");
   options(host, module, 64, 48000);
   CHECK(host, csoundCompileCSD(host, csd, 1, 0) == 0);
@@ -259,9 +259,9 @@ int main(int argc, char **argv) {
       }
     }
     CHECK(paused, peak > .001);
-    CHECK(paused, channel(paused, "fg.epoch") == 1);
-    CHECK(paused, channel(paused, "fg.numeric") == 0);
-    CHECK(paused, channel(paused, "fg.drops") == 0);
+    CHECK(paused, channel(paused, "ng.epoch") == 1);
+    CHECK(paused, channel(paused, "ng.numeric") == 0);
+    CHECK(paused, channel(paused, "ng.drops") == 0);
     /* Turning off is tested while offline, never prescribed on a live thread. */
     MYFLT turnoff[] = {-1, 0, 0};
     csoundEvent(paused, CS_INSTR_EVENT, turnoff, 3, 0);
@@ -279,7 +279,7 @@ int main(int argc, char **argv) {
   }
   prepare(paused, argv[1], 64, 48000, 1);
   CHECK(paused, csoundPerformKsmps(paused) == 0);
-  CHECK(paused, channel(paused, "fg.status") == FG_STATUS_READY);
+  CHECK(paused, channel(paused, "ng.status") == NG_STATUS_READY);
   csoundDestroyMessageBuffer(reference);
   csoundDestroyMessageBuffer(paused);
   csoundDestroy(reference);

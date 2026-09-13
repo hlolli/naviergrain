@@ -2,7 +2,7 @@
 import {GPUProvider} from "../web/gpu-provider";
 import {SharedRing, commandBytes, packetBytes, SolverEngine} from "../web/bridge";
 import {OfflineEngine, bellSource, browserConfig, type CsoundApi} from "../web/engine";
-import {controlDefaults, control as C} from "../web/fluidgrain-schema";
+import {controlDefaults, control as C} from "../web/naviergrain-schema";
 
 Object.defineProperty(globalThis, "window", {value: {
   atob: globalThis.atob.bind(globalThis), btoa: globalThis.btoa.bind(globalThis),
@@ -27,7 +27,7 @@ async function render(request: Request) {
   const {libcsound} = await import(new URL("./csound.js", import.meta.url).href) as {
     libcsound(options: {withPlugins: ArrayBuffer[]}): Promise<CsoundApi>
   };
-  const plugin = await (await fetch("./fluidgrain.wasm")).arrayBuffer();
+  const plugin = await (await fetch("./naviergrain.wasm")).arrayBuffer();
   const includes = await (await fetch("./prepared.inc")).text();
   const audioApi = await libcsound({withPlugins: [plugin]});
   const controls: number[] = [...controlDefaults];

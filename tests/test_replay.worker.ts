@@ -3,14 +3,14 @@ import {SolverEngine, SharedRing, commandBytes, packetBytes} from "../web/bridge
 import {OfflineEngine, bellSource, browserConfig, type CsoundApi} from "../web/engine";
 import {GPUProvider} from "../web/gpu-provider";
 import {GPUFieldSolver} from "../web/gpu-solver";
-import {controlDefaults} from "../web/fluidgrain-schema";
+import {controlDefaults} from "../web/naviergrain-schema";
 function check(value: unknown, message: string): asserts value { if (!value) throw new Error(message); }
 Object.defineProperty(globalThis,"window",{value:{atob:globalThis.atob.bind(globalThis),
   btoa:globalThis.btoa.bind(globalThis),webkitAudioContext:undefined}});
 async function main() {
   const host = new URL("./csound.js",import.meta.url).href;
   const {libcsound} = await import(host) as {libcsound(o:{withPlugins:ArrayBuffer[]}):Promise<CsoundApi>};
-  const plugin = await (await fetch("./fluidgrain.wasm")).arrayBuffer();
+  const plugin = await (await fetch("./naviergrain.wasm")).arrayBuffer();
   const includes = await (await fetch("./prepared.inc")).text();
   const build = await sha256(new Uint8Array(await (await fetch("./provenance.json")).arrayBuffer()));
   const [audioApi, solverApi, replayApi] = await Promise.all([0,1,2].map(()=>libcsound({withPlugins:[plugin]})));

@@ -27,7 +27,7 @@ async function host(plugins) {
   wasm.wasi=wasi;
   return {api:factory(wasm), memory:wasm.exports.memory};
 }
-const schema=await readFile(resolve(import.meta.dir,'../include/fluidgrain.inc'),'utf8');
+const schema=await readFile(resolve(import.meta.dir,'../include/naviergrain.inc'),'utf8');
 const score=block=>`<CsoundSynthesizer>
 <CsOptions>
 -n -d -m0 --sample-accurate
@@ -40,11 +40,11 @@ nchnls=2
 ${schema}
 instr 1
 iSource ftgen 0,0,-240,9,1,1,90
-iConfig[] fillarray $FG_CONFIG_DEFAULTS
-iConfig[$FG_CONFIG_SOURCE_LOOP]=1
-iConfig[$FG_CONFIG_MAX_GRAINS]=256
-kControl[] fillarray $FG_CONTROL_DEFAULTS
-kControl[$FG_CONTROL_GRAIN_RATE] init 600
+iConfig[] fillarray $NG_CONFIG_DEFAULTS
+iConfig[$NG_CONFIG_SOURCE_LOOP]=1
+iConfig[$NG_CONFIG_MAX_GRAINS]=256
+kControl[] fillarray $NG_CONTROL_DEFAULTS
+kControl[$NG_CONTROL_GRAIN_RATE] init 600
 aL,aR,kStats[] naviergrain iSource,52800,iConfig,kControl
 outs aL,aR
 endin

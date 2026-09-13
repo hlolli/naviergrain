@@ -5,7 +5,7 @@ let Processor;const messages=[],credits=[];
 class AudioWorkletProcessor {constructor(){this.port={postMessage:m=>messages.push(m)};}}
 vm.runInNewContext(readFileSync(new URL('../ui/audio.worklet.js',import.meta.url),'utf8'),{
   AudioWorkletProcessor,Float32Array,currentFrame:0,
-  registerProcessor:(name,type)=>{assert.equal(name,'fluidgrain-output');Processor=type;}
+  registerProcessor:(name,type)=>{assert.equal(name,'naviergrain-output');Processor=type;}
 });
 const p=new Processor(),source={postMessage:m=>credits.push(m),start(){}};
 p.port.onmessage({data:{type:'connect',port:source}});assert.equal(credits[0].count,4);

@@ -30,7 +30,7 @@ in pkgs.pkgsCross.wasi32.clangStdenv.mkDerivation {
     for source in field particles resampler core transport provider browser pack opcode; do
       $CC -O2 -fPIC -mllvm -wasm-enable-sjlj -DBUILD_PLUGINS -DUSE_DOUBLE=1 \
         -I${csound}/include/csound -Iinclude -Isrc \
-        -c src/fluidgrain_$source.c -o $source.o
+        -c src/naviergrain_$source.c -o $source.o
     done
     $CC -shared -nostdlib -nostartfiles -Wl,--experimental-pic -Wl,--no-entry \
       -Wl,--import-table -Wl,--import-memory \

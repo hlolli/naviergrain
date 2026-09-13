@@ -3,7 +3,7 @@
  *        -lm -o build/grain_benchmark
  * Run from a fresh output directory. Files use the local little-endian host. */
 #define _POSIX_C_SOURCE 200809L
-#include "../src/fluidgrain_resampler.c" /* reuse the canonical span kernels */
+#include "../src/naviergrain_resampler.c" /* reuse the canonical span kernels */
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -28,16 +28,16 @@ static void binary(const char *name, const void *data, size_t size) {
 /* Identical prepared band choices to WGSL, reusing the production convolution.
  * This additional baseline removes per-sample logarithm and band-selection cost.
  * Input pitches/positions are finite positive dyadic fixtures by construction. */
-static double prepared_read(const FGResampler *reader, const float *v, double position) {
-  double integer=floor(position), frac=(position-integer)*FG_SINC_PHASES;
-  unsigned phase=(unsigned)fmin(FG_SINC_PHASES-1, floor(frac));
+static double prepared_read(const NGResampler *reader, const float *v, double position) {
+  double integer=floor(position), frac=(position-integer)*NG_SINC_PHASES;
+  unsigned phase=(unsigned)fmin(NG_SINC_PHASES-1, floor(frac));
   unsigned band=(unsigned)v[2];double blend=v[3];
   double result=convolve(reader,band,source,SOURCE,integer,phase,frac-phase,1);
-  if(blend>0 && band+1<FG_SINC_BANDS)
+  if(blend>0 && band+1<NG_SINC_BANDS)
     result+=blend*(convolve(reader,band+1,source,SOURCE,integer,phase,frac-phase,1)-result);
   return result;
 }
-static void render(const FGResampler *reader, unsigned count, unsigned frames, double *out, int prepared) {
+static void render(const NGResampler *reader, unsigned count, unsigned frames, double *out, int prepared) {
   for (unsigned frame=0;frame<frames;++frame) {
     double l=0,r=0;
     for (unsigned i=0;i<count;++i) {
@@ -45,7 +45,7 @@ static void render(const FGResampler *reader, unsigned count, unsigned frames, d
       double env=window[(unsigned)v[6]+frame];
       double position=v[0]+(double)frame*v[1];
       double sample=(prepared ? prepared_read(reader,v,position) :
-        fg_read_bandlimited(reader,source,SOURCE,position,v[1],1,96))*env;
+        ng_read_bandlimited(reader,source,SOURCE,position,v[1],1,96))*env;
       l+=sample*v[4]; r+=sample*v[5];
     }
     /* Fixed gain only: isolate convolution/window/pan/mix from overlap smoothing. */
@@ -54,9 +54,9 @@ static void render(const FGResampler *reader, unsigned count, unsigned frames, d
 }
 int main(void) {
   const uint32_t endian=1; require(*(const unsigned char *)&endian==1);
-  FGResampler reader; size_t coefficients=fg_resampler_doubles(4);
+  NGResampler reader; size_t coefficients=ng_resampler_doubles(4);
   double *storage=calloc(coefficients,sizeof(double));require(storage!=NULL);
-  fg_resampler_init(&reader,storage,4);
+  ng_resampler_init(&reader,storage,4);
   for(unsigned i=0;i<SOURCE;++i)
     source[i]=(float)(.4*sin(2*PI*17*i/SOURCE)+.2*sin(2*PI*197*i/SOURCE)+.1*cos(2*PI*401*i/SOURCE));
   for(unsigned i=0;i<WINDOW;++i) window[i]=(float)(.5-.5*cos(2*PI*i/(WINDOW-1)));

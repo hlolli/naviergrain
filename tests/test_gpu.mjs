@@ -49,7 +49,7 @@ try {
      if(data.type==="error")reject(new Error(data.message));else resolve(data.result);
    };
  }));
- const files=["src/fluidgrain_field.c","tests/gpu_reference.c","web/gpu-solver.ts",
+ const files=["src/naviergrain_field.c","tests/gpu_reference.c","web/gpu-solver.ts",
  "web/solver.wgsl","tests/test_gpu.worker.ts","tests/test_gpu.mjs"];
  const hashes={};
  for(const file of files)hashes[file]=createHash("sha256").update(await readFile(file)).digest("hex");

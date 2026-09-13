@@ -1,6 +1,6 @@
 /* Inspect diagnostic-only state without exporting a test API in the plugin. */
-#define FG_TEST_SPATIAL_SHUFFLE
-#include "../src/fluidgrain_core.c"
+#define NG_TEST_SPATIAL_SHUFFLE
+#include "../src/naviergrain_core.c"
 #include <stdio.h>
 #include <stdlib.h>
 
@@ -15,7 +15,7 @@ static int compare(const void *a, const void *b) {
   return (x > y) - (x < y);
 }
 
-static void check_columns(const FGParticle *a, const FGParticle *b,
+static void check_columns(const NGParticle *a, const NGParticle *b,
                            unsigned count, const size_t *columns,
                            unsigned column_count) {
   double *left = malloc((count + 1) * sizeof(double));
@@ -35,32 +35,32 @@ static void check_columns(const FGParticle *a, const FGParticle *b,
   free(right);
 }
 
-static FGEngine *make(unsigned count, unsigned capacity, unsigned seed) {
-  double config[FG_CONFIG_COUNT], control[FG_CONTROL_COUNT];
-  fg_defaults(config, control);
-  config[FG_CONFIG_GRID_SIZE] = 16;
-  config[FG_CONFIG_EMITTER_COUNT] = count;
-  config[FG_CONFIG_MAX_GRAINS] = capacity;
-  config[FG_CONFIG_SOURCE_LOOP] = 1;
-  config[FG_CONFIG_SEED] = seed;
-  FGConfig parsed;
-  CHECK(!fg_config_parse(&parsed, config, FG_CONFIG_COUNT));
-  size_t bytes = fg_memory_size(&parsed, 97, 8000, 8000);
+static NGEngine *make(unsigned count, unsigned capacity, unsigned seed) {
+  double config[NG_CONFIG_COUNT], control[NG_CONTROL_COUNT];
+  ng_defaults(config, control);
+  config[NG_CONFIG_GRID_SIZE] = 16;
+  config[NG_CONFIG_EMITTER_COUNT] = count;
+  config[NG_CONFIG_MAX_GRAINS] = capacity;
+  config[NG_CONFIG_SOURCE_LOOP] = 1;
+  config[NG_CONFIG_SEED] = seed;
+  NGConfig parsed;
+  CHECK(!ng_config_parse(&parsed, config, NG_CONFIG_COUNT));
+  size_t bytes = ng_memory_size(&parsed, 97, 8000, 8000);
   void *memory = malloc(bytes);
   CHECK(memory);
-  FGEngine *e = fg_init(memory, bytes, &parsed, 97, 8000, 8000);
+  NGEngine *e = ng_init(memory, bytes, &parsed, 97, 8000, 8000);
   CHECK(e);
   for (unsigned i = 0; i < 97; ++i)
-    fg_source(e)[i] = .2 * sin(2 * FG_PI * i / 97);
-  control[FG_CONTROL_GRAIN_RATE] = 80;
-  fg_controls(e, control);
+    ng_source(e)[i] = .2 * sin(2 * NG_PI * i / 97);
+  control[NG_CONTROL_GRAIN_RATE] = 80;
+  ng_controls(e, control);
   return e;
 }
 
 static void population(unsigned count, unsigned capacity, unsigned seed) {
-  FGEngine *e = make(count, capacity, seed);
-  FGParticle *physical = malloc((count + capacity) * sizeof(FGParticle));
-  FGParticle *mapped = malloc((count + capacity) * sizeof(FGParticle));
+  NGEngine *e = make(count, capacity, seed);
+  NGParticle *physical = malloc((count + capacity) * sizeof(NGParticle));
+  NGParticle *mapped = malloc((count + capacity) * sizeof(NGParticle));
   CHECK(physical && mapped);
   for (unsigned i = 0; i < count; ++i) {
     e->emitters[i].x = (i + .25) / count;
@@ -69,12 +69,12 @@ static void population(unsigned count, unsigned capacity, unsigned seed) {
     e->emitters[i].strain = i;
     e->emitters[i].speed = i / 10.;
   }
-  memcpy(physical, e->emitters, count * sizeof(FGParticle));
+  memcpy(physical, e->emitters, count * sizeof(NGParticle));
   /* Empty, single, sparse, and full voice populations. */
   for (unsigned mode = 0; mode < 4; ++mode) {
     unsigned live = 0;
     for (unsigned i = 0; i < capacity; ++i) {
-      FGVoice *v = &e->voices[i];
+      NGVoice *v = &e->voices[i];
       v->active = mode == 3 || (mode == 2 && i % 3 == 0) ||
                   (mode == 1 && i == capacity - 1);
       v->particle = e->emitters[i % count];
@@ -83,26 +83,26 @@ static void population(unsigned count, unsigned capacity, unsigned seed) {
     }
     uint32_t schedule = e->schedule_rng, select = e->select_rng,
              emitter = e->emitter_rng;
-    FGField field = e->field;
+    NGField field = e->field;
     shuffle_mappings(e);
-    CHECK(!memcmp(physical, e->emitters, count * sizeof(FGParticle)));
-    CHECK(!memcmp(&field, &e->field, sizeof(FGField)));
+    CHECK(!memcmp(physical, e->emitters, count * sizeof(NGParticle)));
+    CHECK(!memcmp(&field, &e->field, sizeof(NGField)));
     CHECK(schedule == e->schedule_rng && select == e->select_rng &&
           emitter == e->emitter_rng);
-    memcpy(mapped, e->mapping_emitters, count * sizeof(FGParticle));
+    memcpy(mapped, e->mapping_emitters, count * sizeof(NGParticle));
     unsigned index = 0;
     for (unsigned i = 0; i < capacity; ++i) {
       if (!e->voices[i].active)
         continue;
       CHECK(!memcmp(&physical[count + index], &e->voices[i].particle,
-                    sizeof(FGParticle)));
+                    sizeof(NGParticle)));
       mapped[count + index++] = e->voices[i].mapping;
     }
     const size_t emitter_columns[] = {
-      offsetof(FGParticle, x), offsetof(FGParticle, y),
-      offsetof(FGParticle, omega), offsetof(FGParticle, strain),
-      offsetof(FGParticle, speed)};
-    const size_t voice_columns[] = {offsetof(FGParticle, y), offsetof(FGParticle, omega)};
+      offsetof(NGParticle, x), offsetof(NGParticle, y),
+      offsetof(NGParticle, omega), offsetof(NGParticle, strain),
+      offsetof(NGParticle, speed)};
+    const size_t voice_columns[] = {offsetof(NGParticle, y), offsetof(NGParticle, omega)};
     check_columns(physical, mapped, count, emitter_columns, 5);
     check_columns(physical + count, mapped + count, live, voice_columns, 2);
     if (count >= 128) {
@@ -122,12 +122,12 @@ static void population(unsigned count, unsigned capacity, unsigned seed) {
       maximum_correlation = fmax(maximum_correlation, correlation);
     }
     shuffle_mappings(e);
-    CHECK(!memcmp(mapped, e->mapping_emitters, count * sizeof(FGParticle)));
+    CHECK(!memcmp(mapped, e->mapping_emitters, count * sizeof(NGParticle)));
     index = 0;
     for (unsigned i = 0; i < capacity; ++i)
       if (e->voices[i].active)
         CHECK(!memcmp(&mapped[count + index++], &e->voices[i].mapping,
-                      sizeof(FGParticle)));
+                      sizeof(NGParticle)));
   }
   free(physical);
   free(mapped);
@@ -135,24 +135,24 @@ static void population(unsigned count, unsigned capacity, unsigned seed) {
 }
 
 static void lifecycle(void) {
-  FGEngine *a = make(128, 128, 17), *b = make(128, 128, 17);
-  double config[FG_CONFIG_COUNT], control[FG_CONTROL_COUNT];
-  fg_defaults(config, control);
-  control[FG_CONTROL_GRAIN_RATE] = 80;
+  NGEngine *a = make(128, 128, 17), *b = make(128, 128, 17);
+  double config[NG_CONFIG_COUNT], control[NG_CONTROL_COUNT];
+  ng_defaults(config, control);
+  control[NG_CONTROL_GRAIN_RATE] = 80;
   for (unsigned i = 0; i < 16000; ++i) {
     if (i == 3000 || i == 3500 || i == 7000 || i == 8000) {
-      control[FG_CONTROL_RESET] = i == 3000;
-      control[FG_CONTROL_FREEZE] = i == 7000;
-      fg_controls(a, control);
-      fg_controls(b, control);
+      control[NG_CONTROL_RESET] = i == 3000;
+      control[NG_CONTROL_FREEZE] = i == 7000;
+      ng_controls(a, control);
+      ng_controls(b, control);
     }
     double al, ar, bl, br;
-    fg_sample(a, &al, &ar);
-    fg_sample(b, &bl, &br);
+    ng_sample(a, &al, &ar);
+    ng_sample(b, &bl, &br);
     CHECK(isfinite(al) && isfinite(ar) && al == bl && ar == br);
   }
-  CHECK(fg_counters(a).epoch == 1 && fg_counters(a).births > 0);
-  CHECK(!fg_counters(a).numeric_interventions && !fg_counters(a).voice_drops);
+  CHECK(ng_counters(a).epoch == 1 && ng_counters(a).births > 0);
+  CHECK(!ng_counters(a).numeric_interventions && !ng_counters(a).voice_drops);
   free(a);
   free(b);
 }
@@ -160,28 +160,28 @@ static void lifecycle(void) {
 /* An uncached scalar oracle exercises changed, unchanged and reassigned
  * mappings while pitch-depth automation continues at audio rate. */
 static void planning_mapping_oracle(void) {
-  FGEngine *e = make(32, 64, 17);
-  double config[FG_CONFIG_COUNT], control[FG_CONTROL_COUNT];
-  fg_defaults(config, control);
-  control[FG_CONTROL_FREEZE] = 1;
-  control[FG_CONTROL_GRAIN_RATE] = 0;
-  control[FG_CONTROL_GRAIN_MS] = 500;
-  fg_controls(e, control);
+  NGEngine *e = make(32, 64, 17);
+  double config[NG_CONFIG_COUNT], control[NG_CONTROL_COUNT];
+  ng_defaults(config, control);
+  control[NG_CONTROL_FREEZE] = 1;
+  control[NG_CONTROL_GRAIN_RATE] = 0;
+  control[NG_CONTROL_GRAIN_MS] = 500;
+  ng_controls(e, control);
   const double omega[] = {0., -0., 3., 3., -7., 100., -3.};
   for (unsigned reuse = 0; reuse < 2; ++reuse) {
     birth(e);
-    FGVoice *v = &e->voices[0];
+    NGVoice *v = &e->voices[0];
     CHECK(v->active);
     for (unsigned i = 0; i < 140; ++i) {
       v->mapping.omega = omega[(i / 5 + reuse) % 7];
-      control[FG_CONTROL_PITCH_DEPTH] = i < 70 ? 18 : 2;
-      fg_controls(e, control);
+      control[NG_CONTROL_PITCH_DEPTH] = i < 70 ? 18 : 2;
+      ng_controls(e, control);
       double previous_pitch = v->log_pitch, previous_phase = v->phase;
       double left, right;
-      fg_sample(e, &left, &right);
-      double mix = e->smooth[FG_CONTROL_MAPPING_MIX] * e->modulation;
+      ng_sample(e, &left, &right);
+      double mix = e->smooth[NG_CONTROL_MAPPING_MIX] * e->modulation;
       double pitch = clamp(v->base_log_pitch +
-          mix * e->smooth[FG_CONTROL_PITCH_DEPTH] *
+          mix * e->smooth[NG_CONTROL_PITCH_DEPTH] *
           tanh(v->mapping.omega / 10) / 12, -2, 2);
       double expected = previous_pitch + e->smooth10 * (pitch - previous_pitch);
       CHECK(v->log_pitch == expected);
@@ -191,7 +191,7 @@ static void planning_mapping_oracle(void) {
     }
     v->age = v->length - 1;
     double left, right;
-    fg_sample(e, &left, &right);
+    ng_sample(e, &left, &right);
     CHECK(!v->active && e->free_indices[e->free_count - 1] == 0);
   }
   free(e);

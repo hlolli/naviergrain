@@ -10,24 +10,24 @@ static CSOUND *prepare(const char *module,int plan,unsigned block,unsigned frame
  CSOUND *h=csoundCreate(NULL,NULL);CHECK(h);
  char option[4096];snprintf(option,sizeof(option),"--opcode-lib=%s",module);CHECK(!csoundSetOption(h,option));
  char csd[8192],instruction[512];
- snprintf(instruction,sizeof(instruction),"kAddress, kStats[] fluidgrain_plan giSource, sr, iConfig, kControl, %u\nchnset kAddress, \"address\"",frames);
+ snprintf(instruction,sizeof(instruction),"kAddress, kStats[] naviergrain_plan giSource, sr, iConfig, kControl, %u\nchnset kAddress, \"address\"",frames);
  snprintf(csd,sizeof(csd),"<CsoundSynthesizer>\n<CsOptions>\n-n -d -m0\n</CsOptions>\n<CsInstruments>\n"
-  "sr=48000\nksmps=%u\nnchnls=2\n0dbfs=1\n#include \"include/fluidgrain.inc\"\n"
+  "sr=48000\nksmps=%u\nnchnls=2\n0dbfs=1\n#include \"include/naviergrain.inc\"\n"
   "giSource ftgen 1, 0, -997, 10, 1, .2, .1\ninstr 1\n"
-  "iConfig[] fillarray $FG_CONFIG_DEFAULTS\niConfig[$FG_CONFIG_GRID_SIZE]=16\niConfig[$FG_CONFIG_MAX_GRAINS]=128\n"
-  "iConfig[$FG_CONFIG_SOURCE_LOOP]=1\nkControl[] fillarray $FG_CONTROL_DEFAULTS\n"
-  "kControl[$FG_CONTROL_GRAIN_RATE] init 800\nkControl[$FG_CONTROL_GAIN] init .15\n"
-  "kControl[$FG_CONTROL_RESET] chnget \"reset\"\n%s\nendin\n</CsInstruments>\n"
+  "iConfig[] fillarray $NG_CONFIG_DEFAULTS\niConfig[$NG_CONFIG_GRID_SIZE]=16\niConfig[$NG_CONFIG_MAX_GRAINS]=128\n"
+  "iConfig[$NG_CONFIG_SOURCE_LOOP]=1\nkControl[] fillarray $NG_CONTROL_DEFAULTS\n"
+  "kControl[$NG_CONTROL_GRAIN_RATE] init 800\nkControl[$NG_CONTROL_GAIN] init .15\n"
+  "kControl[$NG_CONTROL_RESET] chnget \"reset\"\n%s\nendin\n</CsInstruments>\n"
   "<CsScore>\ni 1 0 -1\nf 0 z\n</CsScore>\n</CsoundSynthesizer>\n",block,
   plan?instruction:
-       "kRun chnget \"run\"\nif kRun==1 then\naL,aR,kStats[] fluidgrain giSource,sr,iConfig,kControl\nouts aL,aR\nendif");
+       "kRun chnget \"run\"\nif kRun==1 then\naL,aR,kStats[] naviergrain giSource,sr,iConfig,kControl\nouts aL,aR\nendif");
  CHECK(!csoundCompileCSD(h,csd,1,0));CHECK(!csoundStart(h));
  return h;
 }
 static uint32_t *mailbox(CSOUND *h) {
  int32_t error=0;double address=csoundGetControlChannel(h,"address",&error);
  CHECK(!error&&isfinite(address)&&address>0);
- uint32_t *m=(uint32_t *)(uintptr_t)address;CHECK(m[0]==0x4d504746u&&m[1]==2);return m;
+ uint32_t *m=(uint32_t *)(uintptr_t)address;CHECK(m[0]==0x4d50474eu&&m[1]==2);return m;
 }
 static void command(CSOUND *h,uint32_t *m,unsigned action,int valid) {
  m[3]=action;CHECK(!csoundPerformKsmps(h));CHECK((m[4]==0)==valid);

@@ -10,20 +10,20 @@ nchnls = 2
 #include "../include/naviergrain.inc"
 instr 1
 #include "source.inc"
-iConfig[] fillarray $FG_CONFIG_DEFAULTS
-kControl[] fillarray $FG_CONTROL_DEFAULTS
+iConfig[] fillarray $NG_CONFIG_DEFAULTS
+kControl[] fillarray $NG_CONTROL_DEFAULTS
 #include "fluid-presets.inc"
 aL, aR, kStats[] naviergrain iSource, sr, iConfig, kControl
 ; Un-limited opcode peak and numerical diagnostics, accumulated every block.
 kLive init 0
 kPeak init 0
 kRelative init 0
-kLive = max(kLive, kStats[$FG_STAT_LIVE_GRAINS])
-kPeak = max(kPeak, kStats[$FG_STAT_PRE_LIMITER_PEAK])
-kRelative = max(kRelative, kStats[$FG_STAT_RMS_DIVERGENCE]/(32*max(sqrt(2*kStats[$FG_STAT_KINETIC_ENERGY]), .001)))
+kLive = max(kLive, kStats[$NG_STAT_LIVE_GRAINS])
+kPeak = max(kPeak, kStats[$NG_STAT_PRE_LIMITER_PEAK])
+kRelative = max(kRelative, kStats[$NG_STAT_RMS_DIVERGENCE]/(32*max(sqrt(2*kStats[$NG_STAT_KINETIC_ENERGY]), .001)))
 kEnd release
 if kEnd == 1 then
-  printks "FG_CLOUD %d live=%.0f peak=%.8f divergence=%.8f numeric=%.0f drops=%.0f\n", 0, p4, kLive, kPeak, kRelative, kStats[$FG_STAT_NUMERIC_INTERVENTIONS], kStats[$FG_STAT_VOICE_DROPS]
+  printks "NG_CLOUD %d live=%.0f peak=%.8f divergence=%.8f numeric=%.0f drops=%.0f\n", 0, p4, kLive, kPeak, kRelative, kStats[$NG_STAT_NUMERIC_INTERVENTIONS], kStats[$NG_STAT_VOICE_DROPS]
 endif
 xtratim .001
 ; Only outer fades and an explicit host safety limiter; no reverb/delay layering.

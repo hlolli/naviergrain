@@ -3,7 +3,7 @@ import {readFile, writeFile} from "node:fs/promises";
 import {resolve} from "node:path";
 import {SharedRing, commandBytes, packetBytes, SolverEngine, type BridgeSetup} from "../web/bridge";
 import {OfflineEngine, bellSource, browserConfig, type CsoundApi} from "../web/engine";
-import {controlDefaults, control, FG_STATUS_PROVIDER_LOST, FG_STATUS_STALE_FIELD} from "../web/fluidgrain-schema";
+import {controlDefaults, control, NG_STATUS_PROVIDER_LOST, NG_STATUS_STALE_FIELD} from "../web/naviergrain-schema";
 
 const root = resolve(import.meta.dir, "..");
 const entry = await readFile(resolve(root, "../csound-wasm-plugin-compiler/node_modules/@csound/browser/dist/csound.js"), "utf8");
@@ -14,7 +14,7 @@ Object.defineProperty(globalThis, "window", {value: {
 }, configurable: true});
 const factory = new Function(entry.replace(marker, "return __lcs__;"))() as
   (options: {withPlugins: ArrayBuffer[]}) => Promise<CsoundApi>;
-const plugin = await readFile(resolve(root, "build/wasm/fluidgrain.wasm"));
+const plugin = await readFile(resolve(root, "build/wasm/naviergrain.wasm"));
 const create = () => factory({withPlugins: [plugin.slice().buffer]});
 const [audioApi, solverApi] = await Promise.all([create(), create()]);
 assert.notEqual(audioApi.getMemory(), solverApi.getMemory());
@@ -62,9 +62,9 @@ function render({external = true, mix = 1, stall = false, pause = false, reset =
       if (observed && block % 16 === 0) engine.view();
       if (solver && !(stall && block >= 100 && block < 440)) solver.work();
       const stats = engine.stats();
-      lost ||= Boolean(stats.status & FG_STATUS_PROVIDER_LOST);
-      stale ||= Boolean(stats.status & FG_STATUS_STALE_FIELD);
-      recovered ||= lost && block > 480 && !(stats.status & FG_STATUS_STALE_FIELD);
+      lost ||= Boolean(stats.status & NG_STATUS_PROVIDER_LOST);
+      stale ||= Boolean(stats.status & NG_STATUS_STALE_FIELD);
+      recovered ||= lost && block > 480 && !(stats.status & NG_STATUS_STALE_FIELD);
       maximumAge = Math.max(maximumAge, stats.field_age_ms);
       // Time the bounded host copy alone, excluding render/solve/channel access.
       if (engine.bridge) {

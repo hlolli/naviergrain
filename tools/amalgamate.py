@@ -5,10 +5,10 @@ from pathlib import Path
 import re
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCES = ('src/fluidgrain_field.c', 'src/fluidgrain_particles.c',
-           'src/fluidgrain_resampler.c', 'src/fluidgrain_core.c',
-           'src/fluidgrain_transport.c', 'src/fluidgrain_provider.c',
-           'src/fluidgrain_browser.c', 'src/fluidgrain_pack.c', 'src/fluidgrain_opcode.c')
+SOURCES = ('src/naviergrain_field.c', 'src/naviergrain_particles.c',
+           'src/naviergrain_resampler.c', 'src/naviergrain_core.c',
+           'src/naviergrain_transport.c', 'src/naviergrain_provider.c',
+           'src/naviergrain_browser.c', 'src/naviergrain_pack.c', 'src/naviergrain_opcode.c')
 
 
 def amalgamate():
@@ -41,7 +41,7 @@ def amalgamate():
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--output', type=Path, default=ROOT / 'build/fluidgrain.c')
+    parser.add_argument('--output', type=Path, default=ROOT / 'build/naviergrain.c')
     args = parser.parse_args()
     source = amalgamate()
     # Match the pinned workbench's editor limit; fail before delivering a file

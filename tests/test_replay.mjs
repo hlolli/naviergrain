@@ -30,15 +30,15 @@ try {
      if(data.type==="error")reject(new Error(data.message));else resolve(data.result);
    };
  }));
- const files=["web/replay.ts","web/bridge.ts","src/fluidgrain_provider.c",
- "src/fluidgrain_browser.c","tests/test_replay.worker.ts","tests/test_replay.mjs"];
+ const files=["web/replay.ts","web/bridge.ts","src/naviergrain_provider.c",
+ "src/naviergrain_browser.c","tests/test_replay.worker.ts","tests/test_replay.mjs"];
  const hashes={};
  for(const file of files)hashes[file]=createHash("sha256").update(await readFile(file)).digest("hex");
 
  const {artifact,...summary}=result;
  const receipt={...summary,browser:browser.version(),args,hashes};
  await mkdir(values.output,{recursive:true});
- await writeFile(resolve(values.output,"gpu-loss.fgreplay.json"),new Uint8Array(artifact));
+ await writeFile(resolve(values.output,"gpu-loss.ngreplay.json"),new Uint8Array(artifact));
  await writeFile(resolve(values.output,"receipt.json"),JSON.stringify(receipt,null,2)+"\n");
  console.log(JSON.stringify(receipt,null,2));
 }finally{await browser.close();}

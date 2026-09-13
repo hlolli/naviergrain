@@ -59,7 +59,7 @@ def main():
                 process.wait()
 
     failure = subprocess.run(base + ["--backend", args.backend,
-                                    "--output", "dac:fluidgrain-missing-device", "--cpu"],
+                                    "--output", "dac:naviergrain-missing-device", "--cpu"],
                              capture_output=True, text=True, timeout=20)
     assert failure.returncode == 1, failure.stdout + failure.stderr
     assert "Cannot open device" in failure.stderr, failure.stderr

@@ -13,36 +13,36 @@ nchnls = 2
 ; No limiter, reverb, EQ or nonlinear processing. Endpoint fades only.
 instr 1
 #include "source.inc"
-iConfig[] fillarray $FG_CONFIG_DEFAULTS
-iConfig[$FG_CONFIG_SOURCE_LOOP] = 1
-iConfig[$FG_CONFIG_PRESSURE_ITERATIONS] = 128
-kControl[] fillarray $FG_CONTROL_DEFAULTS
-kControl[$FG_CONTROL_GAIN] init .3
-kControl[$FG_CONTROL_GRAIN_RATE] init 600
-kControl[$FG_CONTROL_GRAIN_MS] init 150
-kControl[$FG_CONTROL_PITCH_RATIO] init .7
-kControl[$FG_CONTROL_PITCH_DEPTH] init 24
-kControl[$FG_CONTROL_POSITION_SPAN] init 1
-kControl[$FG_CONTROL_DRIVE] init .5
-kControl[$FG_CONTROL_SWIRL] init .7
-kControl[$FG_CONTROL_TURBULENCE] init .2
+iConfig[] fillarray $NG_CONFIG_DEFAULTS
+iConfig[$NG_CONFIG_SOURCE_LOOP] = 1
+iConfig[$NG_CONFIG_PRESSURE_ITERATIONS] = 128
+kControl[] fillarray $NG_CONTROL_DEFAULTS
+kControl[$NG_CONTROL_GAIN] init .3
+kControl[$NG_CONTROL_GRAIN_RATE] init 600
+kControl[$NG_CONTROL_GRAIN_MS] init 150
+kControl[$NG_CONTROL_PITCH_RATIO] init .7
+kControl[$NG_CONTROL_PITCH_DEPTH] init 24
+kControl[$NG_CONTROL_POSITION_SPAN] init 1
+kControl[$NG_CONTROL_DRIVE] init .5
+kControl[$NG_CONTROL_SWIRL] init .7
+kControl[$NG_CONTROL_TURBULENCE] init .2
 kControl[p4] init p5
 kControl[p4] linseg p5, 2, p5, 6, p6, 2, p6
 aL, aR, kStats[] naviergrain iSource, sr, iConfig, kControl
 aEdge linseg 0, .02, 1, 9.96, 1, .02, 0
 outs aL * aEdge, aR * aEdge
-printks "FG_DIAGNOSTIC control=%d value=%.6f live=%d peak=%.6f numeric=%d drops=%d\n", 1, p4, kControl[p4], kStats[$FG_STAT_LIVE_GRAINS], kStats[$FG_STAT_PRE_LIMITER_PEAK], kStats[$FG_STAT_NUMERIC_INTERVENTIONS], kStats[$FG_STAT_VOICE_DROPS]
+printks "NG_DIAGNOSTIC control=%d value=%.6f live=%d peak=%.6f numeric=%d drops=%d\n", 1, p4, kControl[p4], kStats[$NG_STAT_LIVE_GRAINS], kStats[$NG_STAT_PRE_LIMITER_PEAK], kStats[$NG_STAT_NUMERIC_INTERVENTIONS], kStats[$NG_STAT_VOICE_DROPS]
 endin
 </CsInstruments>
 <CsScore>
 #include "../include/naviergrain.inc"
 ; Time    Control                  From       To
-i 1  0 10 $FG_CONTROL_VISCOSITY       0        .01
-i 1 10 10 $FG_CONTROL_SWIRL          -1         1
-i 1 20 10 $FG_CONTROL_TURBULENCE      0         1
-i 1 30 10 $FG_CONTROL_STRAIN_DRIVE   -1         1
-i 1 40 10 $FG_CONTROL_INERTIA_MS      0       300
-i 1 50 10 $FG_CONTROL_ATTRACTION     0         1
+i 1  0 10 $NG_CONTROL_VISCOSITY       0        .01
+i 1 10 10 $NG_CONTROL_SWIRL          -1         1
+i 1 20 10 $NG_CONTROL_TURBULENCE      0         1
+i 1 30 10 $NG_CONTROL_STRAIN_DRIVE   -1         1
+i 1 40 10 $NG_CONTROL_INERTIA_MS      0       300
+i 1 50 10 $NG_CONTROL_ATTRACTION     0         1
 e
 </CsScore>
 </CsoundSynthesizer>

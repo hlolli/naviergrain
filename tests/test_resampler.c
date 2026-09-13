@@ -1,5 +1,5 @@
-#include "fluidgrain_resampler.h"
-#include "fluidgrain_oscillator.h"
+#include "naviergrain_resampler.h"
+#include "naviergrain_oscillator.h"
 #include <math.h>
 #include <stdint.h>
 #include <stdio.h>
@@ -16,7 +16,7 @@
 
 /* Deliberately scalar, per-tap reference: no span splitting or lane sums.
  * This checks indexing/arithmetic independently of the optimized reader. */
-static double reference_read(const FGResampler *r, const double *s, size_t n,
+static double reference_read(const NGResampler *r, const double *s, size_t n,
                              double phase, double increment, int loop,
                              double edge) {
   if (loop) {
@@ -26,17 +26,17 @@ static double reference_read(const FGResampler *r, const double *s, size_t n,
   } else if (phase < 0 || phase > (double)(n - 1))
     return 0;
   double integer = floor(phase);
-  double fractional = (phase - integer) * FG_SINC_PHASES;
-  unsigned p = (unsigned)fmin(FG_SINC_PHASES - 1u, floor(fractional));
+  double fractional = (phase - integer) * NG_SINC_PHASES;
+  unsigned p = (unsigned)fmin(NG_SINC_PHASES - 1u, floor(fractional));
   double location = r->log_range > 0 ? log(fmax(1, increment)) *
-                                           (FG_SINC_BANDS - 1u) / r->log_range
+                                           (NG_SINC_BANDS - 1u) / r->log_range
                                      : 0;
-  location = fmin(FG_SINC_BANDS - 1u, fmax(0, location));
+  location = fmin(NG_SINC_BANDS - 1u, fmax(0, location));
   unsigned band = (unsigned)floor(location);
   double values[2] = {0, 0};
   for (unsigned k = 0; k < 2; ++k) {
     unsigned current = band + k;
-    if (current >= FG_SINC_BANDS)
+    if (current >= NG_SINC_BANDS)
       break;
     unsigned taps = 2u * r->radius[current];
     const double *a = r->coefficients[current] + p * taps;
@@ -68,10 +68,10 @@ static void scalar_agreement(void) {
   double worst = 0;
   unsigned checks = 0;
   for (unsigned m = 0; m < sizeof(maxima) / sizeof(*maxima); ++m) {
-    double *storage = malloc(fg_resampler_doubles(maxima[m]) * sizeof(double));
+    double *storage = malloc(ng_resampler_doubles(maxima[m]) * sizeof(double));
     CHECK(storage);
-    FGResampler r;
-    fg_resampler_init(&r, storage, maxima[m]);
+    NGResampler r;
+    ng_resampler_init(&r, storage, maxima[m]);
     for (unsigned j = 0; j < sizeof(lengths) / sizeof(*lengths); ++j) {
       size_t n = lengths[j];
       /* Exact-sized allocation exposes an overread to ASan, even for n=1. */
@@ -81,7 +81,7 @@ static void scalar_agreement(void) {
         rng = rng * UINT32_C(1664525) + UINT32_C(1013904223);
         source[i] = (double)rng / UINT32_MAX * 2 - 1;
       }
-      for (unsigned b = 0; b < FG_SINC_BANDS; ++b) {
+      for (unsigned b = 0; b < NG_SINC_BANDS; ++b) {
         double increment = exp(r.log_range * fmin(32, b + .37) / 32);
         /* Include every band, partial SIMD tails, both edges, repeated short
          * wraps and non-power-of-two sources. No guard sample is allocated. */
@@ -97,7 +97,7 @@ static void scalar_agreement(void) {
                                  3.17 * (double)n};
         for (unsigned q = 0; q < sizeof(phases) / sizeof(*phases); ++q) {
           for (int loop = 0; loop <= 1; ++loop) {
-            double actual = fg_read_bandlimited(&r, source, n, phases[q],
+            double actual = ng_read_bandlimited(&r, source, n, phases[q],
                                                 increment, loop, 96);
             double expected =
                 reference_read(&r, source, n, phases[q], increment, loop, 96);
@@ -117,31 +117,31 @@ static void scalar_agreement(void) {
          worst);
 }
 
-static void boundaries(FGResampler *r) {
+static void boundaries(NGResampler *r) {
   double s[] = {.7, -.2, .1, .8, -.3};
   for (size_t n = 1; n <= 5; ++n) {
     for (int i = -40; i < 100; ++i) {
       double phase = i * .13;
-      double value = fg_read_bandlimited(r, s, n, phase, 3.17, 1, 10);
+      double value = ng_read_bandlimited(r, s, n, phase, 3.17, 1, 10);
       CHECK(isfinite(value));
-      CHECK(fabs(value - fg_read_bandlimited(r, s, n, phase + 7 * (double)n,
+      CHECK(fabs(value - ng_read_bandlimited(r, s, n, phase + 7 * (double)n,
                                              3.17, 1, 10)) < 1e-12);
       if (n == 1)
         CHECK(fabs(value - .7) < 1e-12);
-      CHECK(isfinite(fg_read_bandlimited(r, s, n, phase, 3.17, 0, 10)));
+      CHECK(isfinite(ng_read_bandlimited(r, s, n, phase, 3.17, 0, 10)));
     }
-    CHECK(fg_read_bandlimited(r, s, n, 0, 1, 0, 10) == 0);
-    CHECK(fg_read_bandlimited(r, s, n, (double)n - 1, 1, 0, 10) == 0);
-    CHECK(fg_read_bandlimited(r, s, n, (double)n, 1, 0, 10) == 0);
-    CHECK(fg_read_bandlimited(r, s, n, -1, 1, 0, 10) == 0);
+    CHECK(ng_read_bandlimited(r, s, n, 0, 1, 0, 10) == 0);
+    CHECK(ng_read_bandlimited(r, s, n, (double)n - 1, 1, 0, 10) == 0);
+    CHECK(ng_read_bandlimited(r, s, n, (double)n, 1, 0, 10) == 0);
+    CHECK(ng_read_bandlimited(r, s, n, -1, 1, 0, 10) == 0);
   }
-  CHECK(fg_read_bandlimited(r, s, 0, 0, 1, 1, 10) == 0);
-  CHECK(fg_read_bandlimited(r, s, 5, NAN, 1, 1, 10) == 0);
-  CHECK(fg_read_bandlimited(r, s, 5, 0, INFINITY, 1, 10) == 0);
-  CHECK(fg_read_bandlimited(r, s, 5, 0, 0, 1, 10) == 0);
+  CHECK(ng_read_bandlimited(r, s, 0, 0, 1, 1, 10) == 0);
+  CHECK(ng_read_bandlimited(r, s, 5, NAN, 1, 1, 10) == 0);
+  CHECK(ng_read_bandlimited(r, s, 5, 0, INFINITY, 1, 10) == 0);
+  CHECK(ng_read_bandlimited(r, s, 5, 0, 0, 1, 10) == 0);
 }
 
-static void spectra(FGResampler *r) {
+static void spectra(NGResampler *r) {
   enum { N = 4096, FRAMES = 1024 };
   double source[N];
   const double increments[] = {.25, .731, 1, 1.01, 1.5, 2, 2.73, 4, 6.13, 8};
@@ -164,8 +164,8 @@ static void spectra(FGResampler *r) {
       for (unsigned k = 0; k < FRAMES; ++k) {
         double phase = .371 + k * increment;
         double actual =
-            fg_read_bandlimited(r, source, N, phase, increment, 1, 1);
-        double preview = fg_read_preview(source, N, phase, 1, 1);
+            ng_read_bandlimited(r, source, N, phase, increment, 1, 1);
+        double preview = ng_read_preview(source, N, phase, 1, 1);
         double expected = sin(2 * PI * frequency * phase);
         power += actual * actual;
         cubic += preview * preview;
@@ -187,19 +187,19 @@ static void spectra(FGResampler *r) {
   CHECK(worst_alias_ratio < .002);
 }
 
-static void continuity(FGResampler *r) {
+static void continuity(NGResampler *r) {
   double s[997];
   for (unsigned i = 0; i < 997; ++i)
     s[i] = sin(2 * PI * 123 * i / 997);
   double worst = 0;
   /* No filter-switch step at any cutoff boundary, unity, or phase wrap. */
-  for (unsigned b = 0; b < FG_SINC_BANDS; ++b) {
-    double increment = exp(r->log_range * b / (FG_SINC_BANDS - 1u));
-    for (unsigned p = 0; p <= FG_SINC_PHASES; ++p) {
-      double phase = 996 + (double)p / FG_SINC_PHASES;
-      double before = fg_read_bandlimited(r, s, 997, phase - 1e-9,
+  for (unsigned b = 0; b < NG_SINC_BANDS; ++b) {
+    double increment = exp(r->log_range * b / (NG_SINC_BANDS - 1u));
+    for (unsigned p = 0; p <= NG_SINC_PHASES; ++p) {
+      double phase = 996 + (double)p / NG_SINC_PHASES;
+      double before = ng_read_bandlimited(r, s, 997, phase - 1e-9,
                                           increment * (1 - 1e-9), 1, 1);
-      double after = fg_read_bandlimited(r, s, 997, phase + 1e-9,
+      double after = ng_read_bandlimited(r, s, 997, phase + 1e-9,
                                          increment * (1 + 1e-9), 1, 1);
       worst = fmax(worst, fabs(after - before));
     }
@@ -209,13 +209,13 @@ static void continuity(FGResampler *r) {
 }
 int main(void) {
   scalar_agreement();
-  CHECK(!fg_resampler_doubles(NAN));
-  CHECK(!fg_resampler_doubles(0));
-  size_t count = fg_resampler_doubles(8);
+  CHECK(!ng_resampler_doubles(NAN));
+  CHECK(!ng_resampler_doubles(0));
+  size_t count = ng_resampler_doubles(8);
   double *storage = malloc(count * sizeof(double));
   CHECK(storage);
-  FGResampler r;
-  fg_resampler_init(&r, storage, 8);
+  NGResampler r;
+  ng_resampler_init(&r, storage, 8);
   boundaries(&r);
   spectra(&r);
   continuity(&r);
@@ -223,18 +223,18 @@ int main(void) {
          (double)count * sizeof(double) / (1024 * 1024));
   for(unsigned i=0;i<=10000;++i){
     double x=-2+4.0*i/10000;
-    CHECK(fabs(fg_osc_pitch(x)-exp2(x))<1e-11);
+    CHECK(fabs(ng_osc_pitch(x)-exp2(x))<1e-11);
     double hz_log=5+9.0*i/10000;
-    CHECK(fabs(fg_osc_pitch(hz_log)/exp2(hz_log)-1)<1e-11);
-    CHECK(fabs(fg_osc_sin(x*10)-sin(x*10))<2e-14);
-    CHECK(fabs(fg_osc_cos(x*10)-cos(x*10))<2e-14);
+    CHECK(fabs(ng_osc_pitch(hz_log)/exp2(hz_log)-1)<1e-11);
+    CHECK(fabs(ng_osc_sin(x*10)-sin(x*10))<2e-14);
+    CHECK(fabs(ng_osc_cos(x*10)-cos(x*10))<2e-14);
   }
   r.cosine=1;
   for(unsigned i=0;i<997;++i) {
     double phase=(double)i*.317;
-    CHECK(fabs(fg_read_bandlimited(&r,NULL,240,phase,1.1,1,1)-cos(2*PI*phase/240))<1e-12);
+    CHECK(fabs(ng_read_bandlimited(&r,NULL,240,phase,1.1,1,1)-cos(2*PI*phase/240))<1e-12);
   }
-  CHECK(fg_read_bandlimited(&r,NULL,240,17,120,1,1)==0);
+  CHECK(ng_read_bandlimited(&r,NULL,240,17,120,1,1)==0);
   free(storage);
   return 0;
 }

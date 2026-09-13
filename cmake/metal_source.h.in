@@ -1,1 +1,1 @@
-static const char fg_metal_source[] = R"FGMETAL(@FG_METAL_SOURCE@)FGMETAL";
+static const char ng_metal_source[] = R"NGMETAL(@NG_METAL_SOURCE@)NGMETAL";

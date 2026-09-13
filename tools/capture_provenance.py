@@ -39,7 +39,7 @@ def main():
         'source_snapshot': {'files': len(source_files), 'sha256_manifest': hashlib.sha256(manifest.encode()).hexdigest(),
                             'scope': ['CMakeLists.txt', 'include', 'Engine', 'OOps', 'Opcodes', 'Top', 'cmake']},
         'generated_headers_sha256': headers,
-        'artifacts_sha256': {str(p): digest(p) for p in (root / 'build/csound', root / 'build/libcsound64.so.7.0', args.build / 'libfluidgrain.so')},
+        'artifacts_sha256': {str(p): digest(p) for p in (root / 'build/csound', root / 'build/libcsound64.so.7.0', args.build / 'libnaviergrain.so')},
         'compiler': subprocess.check_output([compiler, '--version'], text=True).splitlines()[0],
         'build': {key: cache.get(key) for key in ('CMAKE_C_COMPILER', 'CMAKE_BUILD_TYPE', 'CMAKE_C_FLAGS',
                                                 'CMAKE_C_FLAGS_RELWITHDEBINFO', 'CMAKE_MAKE_PROGRAM')},

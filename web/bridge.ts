@@ -27,10 +27,10 @@ export class SharedRing {
       throw new Error("Incorrect shared queue length");
     this.words = new Int32Array(this.buffer, 0, 16);
     if (!buffer) {
-      this.words[0] = 0x46475131; this.words[1] = 1;
+      this.words[0] = 0x4e475131; this.words[1] = 1;
       this.words[2] = bytes; this.words[3] = 4;
     }
-    if (this.words[0] !== 0x46475131 || this.words[1] !== 1 ||
+    if (this.words[0] !== 0x4e475131 || this.words[1] !== 1 ||
         this.words[2] !== bytes || this.words[3] !== 4)
       throw new Error("Incompatible shared queue");
     this.slots = Array.from({length: 4}, (_, i) => new Uint8Array(this.buffer, 64 + i * bytes, bytes));
@@ -107,7 +107,7 @@ export class Mailbox {
       throw new Error("Invalid host-local mailbox offset");
     this.heap = heap;
     this.header = new Uint32Array(heap, this.offset, 16);
-    if (this.header[0] !== 0x46474231 || this.header[1] !== 2 ||
+    if (this.header[0] !== 0x4e474231 || this.header[1] !== 2 ||
         this.header[2] !== mailboxBytes || this.header[3] !== this.mode ||
         this.header[4] !== packetBytes(this.grid) || this.header[5] !== commandBytes)
       throw new Error("Incompatible prepared mailbox");
@@ -157,8 +157,8 @@ nchnls = 2
 0dbfs = 1
 instr 1
 iConfig[] fillarray ${config.join(",")}
-kAddress fluidgrain_browser iConfig, 1
-chnset kAddress, "fg.bridge"
+kAddress naviergrain_browser iConfig, 1
+chnset kAddress, "ng.bridge"
 endin
 </CsInstruments>
 <CsScore>
@@ -171,7 +171,7 @@ f 0 z
       if (!api.wasm) throw new Error("Pinned host raw API is unavailable");
       reserveHostScratch(api.wasm.exports);
       this.mailbox = new Mailbox(api.getMemory(),
-        api.csoundGetControlChannel(this.handle, "fg.bridge"), 1, setup.grid,
+        api.csoundGetControlChannel(this.handle, "ng.bridge"), 1, setup.grid,
         new SharedRing(commandBytes, setup.commands),
         new SharedRing(packetBytes(setup.grid), setup.fields));
     } catch (error) { this.destroy(); throw error; }

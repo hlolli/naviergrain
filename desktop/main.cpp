@@ -1,6 +1,6 @@
 #include "audio.hpp"
 #include "webview/webview.h"
-#include "fluidgrain_ui.h"
+#include "naviergrain_ui.h"
 #include "platform.hpp"
 #include <chrono>
 #include <cmath>
@@ -45,13 +45,13 @@ int main(int argc,char **argv) {
         else if(a[0]==3&&a.size()==1)return instrument.snapshot();
         else if(a[0]==4&&a.size()==1)instrument.use_cpu();
         else if(a[0]==5&&a.size()==1)window.dispatch(quit);
-        else if(a[0]==6&&a.size()==2&&a[1]>=0&&a[1]<fg_profile_count&&std::floor(a[1])==a[1]) {
-          if(!open_profile(fg_profile_urls[static_cast<unsigned>(a[1])]))throw std::runtime_error("Could not open profile");
+        else if(a[0]==6&&a.size()==2&&a[1]>=0&&a[1]<ng_profile_count&&std::floor(a[1])==a[1]) {
+          if(!open_profile(ng_profile_urls[static_cast<unsigned>(a[1])]))throw std::runtime_error("Could not open profile");
         }
         else throw std::runtime_error("Invalid command");
         return "{\"ok\":true}";
       }catch(const std::exception &e){std::cerr<<e.what()<<"\n";return "{\"error\":\"The audio command failed. Check the output device and try again.\"}";}
     });
-    window.set_html(fg_ui_html);window.run();instrument.stop();
+    window.set_html(ng_ui_html);window.run();instrument.stop();
   }catch(const std::exception &e){std::cerr<<e.what()<<"\n";return 1;}
 }

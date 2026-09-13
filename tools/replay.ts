@@ -1,5 +1,5 @@
 /** Replay a bounded offline archive with the pinned host; no solver/GPU needed.
- * Usage: bun tools/replay.ts --input capture.fgreplay.json --output replay.wav */
+ * Usage: bun tools/replay.ts --input capture.ngreplay.json --output replay.wav */
 import {readFile, writeFile, stat} from "node:fs/promises";
 import {parseArgs} from "node:util";
 import {resolve} from "node:path";
@@ -7,7 +7,7 @@ import {ReplayPlayer, sha256} from "../web/replay";
 import {encodeWav, type CsoundApi} from "../web/engine";
 const {values} = parseArgs({options:{input:{type:"string"},output:{type:"string"},
   assets:{type:"string",default:"build/web"}}});
-if(!values.input || !values.output)throw new Error("Pass --input capture.fgreplay.json --output replay.wav");
+if(!values.input || !values.output)throw new Error("Pass --input capture.ngreplay.json --output replay.wav");
 if(resolve(values.input)===resolve(values.output))throw new Error("Input and output must differ");
 if((await stat(values.input)).size>64*1024*1024)throw new Error("Replay exceeds 64 MiB");
 const assets=resolve(values.assets!);
@@ -15,7 +15,7 @@ const manifest=await readFile(resolve(assets,"provenance.json"));
 const provenance=JSON.parse(manifest.toString());
 // Verify actual runtime bytes, not merely the provenance file's claims.
 const entry=await readFile(resolve(assets,"csound.js"));
-const plugin=await readFile(resolve(assets,"fluidgrain.wasm"));
+const plugin=await readFile(resolve(assets,"naviergrain.wasm"));
 if(await sha256(entry)!==provenance.browserEntrySha256 || await sha256(plugin)!==provenance.wasmSha256)
   throw new Error("Runtime assets differ from the recorded build");
 for(const [name,expected] of Object.entries(provenance.applicationSha256)) {

@@ -14,20 +14,20 @@ spec.loader.exec_module(bundler)
 
 
 def main():
-    with tempfile.TemporaryDirectory(prefix='fluidgrain-package-') as directory:
+    with tempfile.TemporaryDirectory(prefix='naviergrain-package-') as directory:
         root = Path(directory).resolve()
         for name in (*bundler.REQUIRED_SOURCE, *bundler.AUDIO_FILES,
                      *bundler.LOCAL_VIDEO_TOOLS, '.local/development-archive/README.md',
-                     'docs/diagnostic-audio.json', 'src/fluidgrain_grains.metal',
+                     'docs/diagnostic-audio.json', 'src/naviergrain_grains.metal',
                      'desktop/main.cpp', 'cmake/desktop.cmake', 'ui/main.js',
                      'ui/fonts/ibmplexsans-OFL.txt',
-                     'tests/test_host.c', 'examples/cpu-worker.c', 'tools/package_native.py', 'build/libfluidgrain.so',
-                     'Custom.cmake', '.env', 'build/libfluidgrain_profile.so',
-                     'build/libfluidgrain_shuffle.so', 'tools/__pycache__/junk.pyc'):
+                     'tests/test_host.c', 'examples/cpu-worker.c', 'tools/package_native.py', 'build/libnaviergrain.so',
+                     'Custom.cmake', '.env', 'build/libnaviergrain_profile.so',
+                     'build/libnaviergrain_shuffle.so', 'tools/__pycache__/junk.pyc'):
             path = root / name
             path.parent.mkdir(parents=True, exist_ok=True)
             path.write_text(name)
-        module = root / 'build/libfluidgrain.so'
+        module = root / 'build/libnaviergrain.so'
         first, second = root / 'first.tar.gz', root / 'second.tar.gz'
         bundler.package(root, module, first)
         bundler.package(root, module, second)
@@ -38,14 +38,14 @@ def main():
             manifest = json.load(archive.extractfile(f'{bundler.PREFIX}/MANIFEST.json'))
             names = set(manifest['files'])
             assert not any('Custom.cmake' in name or '.env' in name or
-                           'libfluidgrain_profile' in name or 'libfluidgrain_shuffle' in name or
+                           'libnaviergrain_profile' in name or 'libnaviergrain_shuffle' in name or
                            '__pycache__' in name for name in names)
             assert set(bundler.REQUIRED_SOURCE) | set(bundler.AUDIO_FILES) <= names
             assert 'examples/cpu-worker.c' in names
             assert names.isdisjoint(bundler.LOCAL_VIDEO_TOOLS)
             assert 'docs/diagnostic-audio.json' not in names
             assert not any(name.startswith('.local/') for name in names)
-            assert {'src/fluidgrain_grains.metal', 'desktop/main.cpp',
+            assert {'src/naviergrain_grains.metal', 'desktop/main.cpp',
                     'cmake/desktop.cmake', 'ui/main.js',
                     'ui/fonts/ibmplexsans-OFL.txt'} <= names
             assert len(members) == len(names) + 1
@@ -71,7 +71,7 @@ def main():
         missing.unlink()
         missing.write_text('restored')
         try:
-            bundler.package(root, root / 'build/libfluidgrain_profile.so', first)
+            bundler.package(root, root / 'build/libnaviergrain_profile.so', first)
             raise AssertionError('Diagnostic binary must not be packaged as production')
         except ValueError:
             pass

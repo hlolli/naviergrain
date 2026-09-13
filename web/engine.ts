@@ -1,7 +1,7 @@
 import {PreparedChannels, reserveHostScratch, type ChannelExports} from "./channels";
 import {Mailbox, SharedRing, commandBytes, packetBytes, type BridgeSetup} from "./bridge";
-import schema from "../schema/fluidgrain-v1.json";
-import {config, control, stat, FG_STATUS_READY} from "./fluidgrain-schema";
+import schema from "../schema/naviergrain-v1.json";
+import {config, control, stat, NG_STATUS_READY} from "./naviergrain-schema";
 
 export const sampleRate = 48000;
 export const blockSize = 64;
@@ -81,7 +81,7 @@ export class OfflineEngine {
       const assignments = settings.controls.map((value, i) =>
         "kControl[" + i + "] init " + value).join("\n");
       const channels = schema.stat.map((item, i) =>
-        'chnset kStats[' + i + '], "fg.' + item.name + '"').join("\n");
+        'chnset kStats[' + i + '], "ng.' + item.name + '"').join("\n");
       const csd = `<CsoundSynthesizer>
 <CsOptions>
 -n -d -m0
@@ -96,13 +96,13 @@ giSource ftgen 1, 0, -${settings.source.length}, -2, 0
 ${observed ? "giView ftgen 2, 0, -3344, -2, 0" : ""}
 instr 1
 iConfig[] fillarray ${cfg.join(",")}
-${external ? 'kAddress fluidgrain_browser iConfig, 0\nchnset kAddress, "fg.bridge"' : ""}
+${external ? 'kAddress naviergrain_browser iConfig, 0\nchnset kAddress, "ng.bridge"' : ""}
 kControl[] fillarray ${settings.controls.join(",")}
 ${assignments}
-kControl[${control.reset}] chnget "fg.reset"
-kRun chnget "fg.run"
-${observed ? 'kObserve chnget "fg.observe"' : ""}
-aL, aR, kStats[] ${observed ? "FluidGrainVisualPrepared" : "FluidGrainPrepared"} giSource, ${settings.sourceRate}, iConfig, kControl, kRun${observed ? ", giView, kObserve" : ""}
+kControl[${control.reset}] chnget "ng.reset"
+kRun chnget "ng.run"
+${observed ? 'kObserve chnget "ng.observe"' : ""}
+aL, aR, kStats[] ${observed ? "NaviergrainVisualPrepared" : "NaviergrainPrepared"} giSource, ${settings.sourceRate}, iConfig, kControl, kRun${observed ? ", giView, kObserve" : ""}
 ${channels}
 outs aL, aR
 endin
@@ -120,7 +120,7 @@ f 0 z
       api.csoundTableCopyIn(this.handle, 1, settings.source);
       this.perform();
       const prepared = this.stats();
-      if (!(prepared.status & FG_STATUS_READY) || prepared.live_grains !== 0 ||
+      if (!(prepared.status & NG_STATUS_READY) || prepared.live_grains !== 0 ||
           prepared.snapshot_sequence !== 0 || prepared.source_length !== settings.source.length)
         throw new Error("Silent preparation did not reach the ready state");
       if (this.output().some(value => value !== 0))
@@ -135,11 +135,11 @@ f 0 z
         if (!api.wasm) throw new Error("Pinned host raw API is unavailable");
         reserveHostScratch(api.wasm.exports);
         this.channels = new PreparedChannels(api.getMemory(), api.wasm.exports, this.handle,
-          ["fg.run", "fg.observe", "fg.reset", "fg.bridge", ...schema.stat.map(item => "fg." + item.name)]);
+          ["ng.run", "ng.observe", "ng.reset", "ng.bridge", ...schema.stat.map(item => "ng." + item.name)]);
       }
       this.buffer = api.getMemory().buffer;
       if (external) this.bridge = new Mailbox(api.getMemory(),
-        this.channels!.get("fg.bridge"), 0, external.grid,
+        this.channels!.get("ng.bridge"), 0, external.grid,
         new SharedRing(packetBytes(external.grid), external.fields),
         new SharedRing(commandBytes, external.commands));
     } catch (error) {
@@ -162,12 +162,12 @@ f 0 z
   }
   stats(): Stats {
     return Object.fromEntries(schema.stat.map(item => [item.name,
-      (this.channels ? this.channels.get("fg." + item.name) :
-        this.api.csoundGetControlChannel(this.handle, "fg." + item.name))])) as Stats;
+      (this.channels ? this.channels.get("ng." + item.name) :
+        this.api.csoundGetControlChannel(this.handle, "ng." + item.name))])) as Stats;
   }
   /** Gate blocks are for lifecycle verification, not missed-wall-time catchup. */
   silence(blocks = 1): void {
-    this.setChannel("fg.run", 0);
+    this.setChannel("ng.run", 0);
     for (let i = 0; i < blocks; i++) {
       this.perform();
       if (this.output().some(value => value !== 0)) throw new Error("Pause leaked audio");
@@ -175,15 +175,15 @@ f 0 z
   }
   resumeExternal(): void { this.bridge?.resume(); }
   reset(high: boolean): void {
-    this.setChannel("fg.reset", Number(high));
+    this.setChannel("ng.reset", Number(high));
   }
   render(blocks: number, observe = false): Float64Array {
     if (!Number.isInteger(blocks) || blocks < 1 || blocks > 64)
       throw new Error("Render chunks must contain 1–64 blocks");
     if (observe && !this.observed) throw new Error("Observation was not prepared");
-    this.setChannel("fg.observe", Number(observe));
+    this.setChannel("ng.observe", Number(observe));
     const result = new Float64Array(blocks * blockSize * 2);
-    this.setChannel("fg.run", 1);
+    this.setChannel("ng.run", 1);
     for (let i = 0; i < blocks; i++) {
       this.bridge?.before();
       this.perform();

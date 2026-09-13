@@ -1,6 +1,6 @@
 #define _POSIX_C_SOURCE 200809L
 #include <csound.h>
-#include "fluidgrain_buffered.h"
+#include "naviergrain_buffered.h"
 #include <dlfcn.h>
 #include <math.h>
 #include <stdio.h>
@@ -19,16 +19,16 @@ static void setup_profile(CSOUND *h,const char *module,unsigned block,double rat
   snprintf(option,sizeof(option),"--opcode-lib=%s",module);CHECK(!csoundSetOption(h,option));
   snprintf(csd,sizeof(csd),
     "<CsoundSynthesizer>\n<CsOptions>\n-n -d -m0 --sample-accurate\n</CsOptions>\n<CsInstruments>\n"
-    "sr=48000\nksmps=%u\nnchnls=2\n0dbfs=1\n#include \"include/fluidgrain.inc\"\n"
-    "instr 1\nkControl[] fillarray $FG_CONTROL_DEFAULTS\n"
-    "kControl[$FG_CONTROL_GAIN] init .15\nkControl[$FG_CONTROL_GRAIN_RATE] init %.17g\n"
-    "kControl[$FG_CONTROL_GRAIN_MS] init %.17g\n"
-    "kControl[$FG_CONTROL_RESET] chnget \"reset\"\nkControl[$FG_CONTROL_FREEZE] chnget \"freeze\"\n"
+    "sr=48000\nksmps=%u\nnchnls=2\n0dbfs=1\n#include \"include/naviergrain.inc\"\n"
+    "instr 1\nkControl[] fillarray $NG_CONTROL_DEFAULTS\n"
+    "kControl[$NG_CONTROL_GAIN] init .15\nkControl[$NG_CONTROL_GRAIN_RATE] init %.17g\n"
+    "kControl[$NG_CONTROL_GRAIN_MS] init %.17g\n"
+    "kControl[$NG_CONTROL_RESET] chnget \"reset\"\nkControl[$NG_CONTROL_FREEZE] chnget \"freeze\"\n"
     "kEnable chnget \"enable\"\nkMode chnget \"mode\"\n"
     "aL,aR,kStats[],kGPU,kUnder,kQueued,kPlayed naviergrain_buffered 1,kControl,kEnable,kMode\n"
-    "chnset kStats[$FG_STAT_LIVE_GRAINS],\"voices\"\n"
-    "chnset kStats[$FG_STAT_VOICE_DROPS],\"drops\"\n"
-    "chnset kStats[$FG_STAT_NUMERIC_INTERVENTIONS],\"interventions\"\n"
+    "chnset kStats[$NG_STAT_LIVE_GRAINS],\"voices\"\n"
+    "chnset kStats[$NG_STAT_VOICE_DROPS],\"drops\"\n"
+    "chnset kStats[$NG_STAT_NUMERIC_INTERVENTIONS],\"interventions\"\n"
     "chnset kGPU,\"gpu\"\nchnset kUnder,\"under\"\nchnset kQueued,\"queued\"\nchnset kPlayed,\"played\"\n"
     "outs aL,aR\nendin\n</CsInstruments>\n<CsScore>\ni 1 .0001458333333333 120\ne\n</CsScore>\n</CsoundSynthesizer>\n",block,rate,duration);
   CHECK(!csoundCompileCSD(h,csd,1,0));
@@ -36,17 +36,17 @@ static void setup_profile(CSOUND *h,const char *module,unsigned block,double rat
 static void setup(CSOUND *h,const char *module,unsigned block) {
   setup_profile(h,module,block,600,40);
 }
-static void run(const char *module,const FGNativeBufferedAPI *api,int device,unsigned block) {
-  double values[FG_CONFIG_COUNT],controls[FG_CONTROL_COUNT],source[997];fg_defaults(values,controls);
-  values[FG_CONFIG_GRID_SIZE]=16;values[FG_CONFIG_MAX_GRAINS]=128;
-  controls[FG_CONTROL_GAIN]=.15;controls[FG_CONTROL_GRAIN_RATE]=600;controls[FG_CONTROL_GRAIN_MS]=40;
-  FGConfig config;CHECK(!fg_config_parse(&config,values,FG_CONFIG_COUNT));
+static void run(const char *module,const NGNativeBufferedAPI *api,int device,unsigned block) {
+  double values[NG_CONFIG_COUNT],controls[NG_CONTROL_COUNT],source[997];ng_defaults(values,controls);
+  values[NG_CONFIG_GRID_SIZE]=16;values[NG_CONFIG_MAX_GRAINS]=128;
+  controls[NG_CONTROL_GAIN]=.15;controls[NG_CONTROL_GRAIN_RATE]=600;controls[NG_CONTROL_GRAIN_MS]=40;
+  NGConfig config;CHECK(!ng_config_parse(&config,values,NG_CONFIG_COUNT));
   for(unsigned i=0;i<997;++i)source[i]=.2*sin(6.283185307179586*i/37);
-  FGBuffered *b=api->create(&config,source,997,36000,48000,512,device);CHECK(b);
-  FGBuffered *other=api->create(&config,source,997,36000,48000,512,-1);CHECK(other);
-  size_t bytes=fg_memory_size(&config,997,36000,48000);
-  FGEngine *ref=fg_init(malloc(bytes),bytes,&config,997,36000,48000);CHECK(ref);
-  memcpy(fg_source(ref),source,sizeof(source));memset(source,0,sizeof(source));
+  NGBuffered *b=api->create(&config,source,997,36000,48000,512,device);CHECK(b);
+  NGBuffered *other=api->create(&config,source,997,36000,48000,512,-1);CHECK(other);
+  size_t bytes=ng_memory_size(&config,997,36000,48000);
+  NGEngine *ref=ng_init(malloc(bytes),bytes,&config,997,36000,48000);CHECK(ref);
+  memcpy(ng_source(ref),source,sizeof(source));memset(source,0,sizeof(source));
   CSOUND *h=csoundCreate(NULL,NULL),*second=csoundCreate(NULL,NULL);CHECK(h&&second);
   setup(h,module,block);setup(second,module,block);
   CHECK(!api->register_buffer(h,0,b));CHECK(api->register_buffer(h,1,b));
@@ -74,13 +74,13 @@ static void run(const char *module,const FGNativeBufferedAPI *api,int device,uns
       CHECK(ch(h,"played")==total&&ch(h,"queued")==2048);
       for(unsigned f=0;f<2*block;++f)CHECK(csoundGetSpout(h)[f]==0);
     }
-    CHECK(ch(h,"gpu")==(FG_TEST_DEVICE_GPU&&(device==0)&&phase==0));
+    CHECK(ch(h,"gpu")==(NG_TEST_DEVICE_GPU&&(device==0)&&phase==0));
     double expected[4096];
     for(unsigned batch=0;batch<4;++batch) {
-      controls[FG_CONTROL_RESET]=phase==1&&batch==0;
-      controls[FG_CONTROL_FREEZE]=phase==2;
-      fg_controls(ref,controls);
-      for(unsigned f=0;f<512;++f)fg_sample(ref,&expected[2*(batch*512+f)],&expected[2*(batch*512+f)+1]);
+      controls[NG_CONTROL_RESET]=phase==1&&batch==0;
+      controls[NG_CONTROL_FREEZE]=phase==2;
+      ng_controls(ref,controls);
+      for(unsigned f=0;f<512;++f)ng_sample(ref,&expected[2*(batch*512+f)],&expected[2*(batch*512+f)+1]);
     }
     csoundSetControlChannel(h,"mode",2);
     unsigned consumed=0;
@@ -94,7 +94,7 @@ static void run(const char *module,const FGNativeBufferedAPI *api,int device,uns
         if(block==64&&phase&&consumed+f<32)wanted*=(double)(consumed+f+1)/32;
         double v=out[2*f+channel];CHECK(isfinite(v));
         peak=fmax(peak,fabs(v));error=fmax(error,fabs(v-wanted));CHECK(fabs(v-wanted)<1e-5);
-        if((device<0||!FG_TEST_DEVICE_GPU)&&(!phase||block!=64||consumed+f>=32))CHECK(v==wanted);
+        if((device<0||!NG_TEST_DEVICE_GPU)&&(!phase||block!=64||consumed+f>=32))CHECK(v==wanted);
       }
       for(unsigned f=next-consumed;f<block;++f)CHECK(out[2*f]==0&&out[2*f+1]==0);
       consumed=next;
@@ -115,14 +115,14 @@ static void message(CSOUND *h,int32_t attributes,const char *text) {
   (void)h;(void)attributes;
   if(strstr(text,"needs fresh host-prepared binding"))rejected=1;
 }
-static void invalid_bindings(const char *module,const FGNativeBufferedAPI *api) {
-  double values[FG_CONFIG_COUNT],controls[FG_CONTROL_COUNT],source[8]={.1};
-  fg_defaults(values,controls);values[FG_CONFIG_GRID_SIZE]=16;
-  values[FG_CONFIG_MAX_GRAINS]=32;
-  FGConfig config;CHECK(!fg_config_parse(&config,values,FG_CONFIG_COUNT));
+static void invalid_bindings(const char *module,const NGNativeBufferedAPI *api) {
+  double values[NG_CONFIG_COUNT],controls[NG_CONTROL_COUNT],source[8]={.1};
+  ng_defaults(values,controls);values[NG_CONFIG_GRID_SIZE]=16;
+  values[NG_CONFIG_MAX_GRAINS]=32;
+  NGConfig config;CHECK(!ng_config_parse(&config,values,NG_CONFIG_COUNT));
   for(unsigned test=0;test<3;++test) {
     CSOUND *h=csoundCreate(NULL,NULL);CHECK(h);setup(h,module,64);
-    FGBuffered *b=NULL;
+    NGBuffered *b=NULL;
     if(test) {
       b=api->create(&config,source,8,48000,test==1?44100:48000,test==2?32:512,-1);
       CHECK(b&&api->register_buffer(h,1,b));
@@ -164,15 +164,15 @@ typedef struct {
   unsigned calls,over_budget,late_calls,gpu_calls;
   double peak,voices;
 } CapacityPhase;
-static void capacity(const char *module,const FGNativeBufferedAPI *api,
+static void capacity(const char *module,const NGNativeBufferedAPI *api,
                      const char *name,double rate,double duration,unsigned seconds) {
   const unsigned block=64,half_calls=seconds*48000u/block/2;
-  double values[FG_CONFIG_COUNT],controls[FG_CONTROL_COUNT],source[4096];
-  fg_defaults(values,controls);values[FG_CONFIG_MAX_GRAINS]=1024;
-  FGConfig config;CHECK(!fg_config_parse(&config,values,FG_CONFIG_COUNT));
+  double values[NG_CONFIG_COUNT],controls[NG_CONTROL_COUNT],source[4096];
+  ng_defaults(values,controls);values[NG_CONFIG_MAX_GRAINS]=1024;
+  NGConfig config;CHECK(!ng_config_parse(&config,values,NG_CONFIG_COUNT));
   for(unsigned i=0;i<4096;++i)source[i]=.2*sin(6.283185307179586*i/37);
   uint64_t prepare=now_ns();
-  FGBuffered *b=api->create(&config,source,4096,48000,48000,512,0);CHECK(b);
+  NGBuffered *b=api->create(&config,source,4096,48000,48000,512,0);CHECK(b);
   CSOUND *h=csoundCreate(NULL,NULL);CHECK(h);setup_profile(h,module,block,rate,duration);
   CHECK(api->register_buffer(h,1,b));CHECK(!csoundStart(h));
   csoundSetControlChannel(h,"enable",1);CHECK(!csoundPerformKsmps(h));
@@ -244,10 +244,10 @@ static void capacity(const char *module,const FGNativeBufferedAPI *api,
 int main(int argc,char **argv) {
   CHECK(argc==2||(argc==3&&!strcmp(argv[2],"--capacity")));csoundInitialize(CSOUNDINIT_NO_SIGNAL_HANDLER|CSOUNDINIT_NO_ATEXIT);
   void *module=dlopen(argv[1],RTLD_NOW|RTLD_LOCAL);CHECK(module);
-  const FGNativeBufferedAPI *(*entry)(void);void *symbol=dlsym(module,"fluidgrain_native_buffered_api");
-  CHECK(symbol);memcpy(&entry,&symbol,sizeof(entry));const FGNativeBufferedAPI *api=entry();CHECK(api&&api->version==1);
+  const NGNativeBufferedAPI *(*entry)(void);void *symbol=dlsym(module,"naviergrain_native_buffered_api");
+  CHECK(symbol);memcpy(&entry,&symbol,sizeof(entry));const NGNativeBufferedAPI *api=entry();CHECK(api&&api->version==1);
   if(argc==3) {
-    CHECK(FG_TEST_DEVICE_GPU);
+    CHECK(NG_TEST_DEVICE_GPU);
     capacity(argv[1],api,"low",100,40,20);
     capacity(argv[1],api,"normal",600,80,20);
     capacity(argv[1],api,"dense",2000,200,20);

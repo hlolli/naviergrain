@@ -41,4 +41,4 @@ class BufferedPreview extends AudioWorkletProcessor {
     return !this.queue.ended;
   }
 }
-registerProcessor("fluidgrain-preview", BufferedPreview);
+registerProcessor("naviergrain-preview", BufferedPreview);

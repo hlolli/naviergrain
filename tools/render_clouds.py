@@ -45,7 +45,7 @@ def main():
             output = (args.output / f'{label}.wav').resolve()
             csd = re.sub(r'<CsScore>.*?</CsScore>',
                          f'<CsScore>\ni 1 0 10 {scene} {mix}\ne\n</CsScore>', template, flags=re.S)
-            with tempfile.TemporaryDirectory(prefix='fluidgrain-cloud-') as folder:
+            with tempfile.TemporaryDirectory(prefix='naviergrain-cloud-') as folder:
                 source = Path(folder) / 'cloud.csd'
                 source.write_text(csd)
                 try:
@@ -62,7 +62,7 @@ def main():
             (args.output / f'{label}.log').write_text(log)
             if result.returncode:
                 raise RuntimeError(log)
-            observations = re.findall(r'FG_CLOUD (\d+) live=([\d.]+) peak=([\d.]+) divergence=([\d.]+) numeric=([\d.]+) drops=([\d.]+)', log)
+            observations = re.findall(r'NG_CLOUD (\d+) live=([\d.]+) peak=([\d.]+) divergence=([\d.]+) numeric=([\d.]+) drops=([\d.]+)', log)
             if not observations:
                 raise RuntimeError('Missing opcode diagnostics: ' + log)
             _, live, peak, divergence, numeric, drops = observations[-1]
@@ -105,7 +105,7 @@ def main():
                                     listening_order=['fluid', '250 ms silence', 'spatial shuffle']))
     (args.output / 'measurements.json').write_text(json.dumps(records, indent=2)+'\n')
     if args.shuffle_module:
-        sources = ['src/fluidgrain_core.c', 'tests/spatial_shuffle.inc',
+        sources = ['src/naviergrain_core.c', 'tests/spatial_shuffle.inc',
                    'examples/fluid-clouds.csd', 'examples/fluid-presets.inc',
                    'examples/source.inc', 'tools/render_clouds.py']
         receipt = dict(scope='Offline spatial-correlation diagnostic; no limiter/effects',

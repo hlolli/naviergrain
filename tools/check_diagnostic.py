@@ -13,15 +13,15 @@ NAMES = ('viscosity', 'swirl', 'turbulence', 'strain_drive', 'inertia_ms', 'attr
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--audio', type=Path, default=ROOT / 'build/fluidgrain-diagnostic.wav')
+    parser.add_argument('--audio', type=Path, default=ROOT / 'build/naviergrain-diagnostic.wav')
     parser.add_argument('--log', type=Path, default=ROOT / 'build/diagnostic.log')
     parser.add_argument('--output', type=Path, default=ROOT / 'build/diagnostic-audio.json')
     args = parser.parse_args()
-    schema = json.loads((ROOT / 'schema/fluidgrain-v1.json').read_text())
+    schema = json.loads((ROOT / 'schema/naviergrain-v1.json').read_text())
     controls = {item['name']: index for index, item in enumerate(schema['control'])}
     log = args.log.read_text()
     assert 'Undefined macro' not in log, 'Score macros were not expanded'
-    rows = re.findall(r'FG_DIAGNOSTIC control=(\d+) value=([\d.e+-]+) live=(\d+) peak=([\d.e+-]+) numeric=(\d+) drops=(\d+)', log)
+    rows = re.findall(r'NG_DIAGNOSTIC control=(\d+) value=([\d.e+-]+) live=(\d+) peak=([\d.e+-]+) numeric=(\d+) drops=(\d+)', log)
     assert {int(r[0]) for r in rows} == {controls[name] for name in NAMES}
     assert all(int(r[4]) == 0 and int(r[5]) == 0 for r in rows)
     scenes = []

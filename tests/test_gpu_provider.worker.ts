@@ -2,7 +2,7 @@ import {GPUProvider, decodeFieldCommand, encodeGPUField, type GPUBackend} from "
 import {GPUFieldSolver, type GPUProfile} from "../web/gpu-solver";
 import {SharedRing, commandBytes, packetBytes, SolverEngine} from "../web/bridge";
 import {OfflineEngine, bellSource, browserConfig, type CsoundApi} from "../web/engine";
-import {controlDefaults, control as C} from "../web/fluidgrain-schema";
+import {controlDefaults, control as C} from "../web/naviergrain-schema";
 function check(value: unknown, message: string): asserts value { if (!value) throw new Error(message); }
 Object.defineProperty(globalThis,"window",{value:{atob:globalThis.atob.bind(globalThis),
   btoa:globalThis.btoa.bind(globalThis),webkitAudioContext:undefined}});
@@ -10,7 +10,7 @@ const same = (a: Float64Array,b: Float64Array) => a.length===b.length && a.every
 async function main() {
   const host = new URL("./csound.js",import.meta.url).href;
   const {libcsound} = await import(host) as {libcsound(o:{withPlugins:ArrayBuffer[]}):Promise<CsoundApi>};
-  const plugin = await (await fetch("./fluidgrain.wasm")).arrayBuffer();
+  const plugin = await (await fetch("./naviergrain.wasm")).arrayBuffer();
   const includes = await (await fetch("./prepared.inc")).text();
   const [audioApi,cpuApi] = await Promise.all([libcsound({withPlugins:[plugin]}),libcsound({withPlugins:[plugin]})]);
   const records: object[] = [];
@@ -95,7 +95,7 @@ async function main() {
 
   // Exact uint64 packet/command metadata, not rounded through Number.
   const bytes=new Uint8Array(commandBytes),view=new DataView(bytes.buffer);
-  view.setUint32(0,0x4d434746,true);view.setUint32(4,1,true);view.setBigUint64(8,1n,true);
+  view.setUint32(0,0x4d43474e,true);view.setUint32(4,1,true);view.setBigUint64(8,1n,true);
   const wide=(1n<<60n)+37n;
   for(const offset of [16,24,32,40])view.setBigUint64(offset,wide,true);
   controlDefaults.forEach((v,i)=>view.setFloat64(64+8*i,i===C.pitch_ratio?Math.log2(v):v,true));

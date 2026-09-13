@@ -8,7 +8,7 @@ const {values}=parseArgs({options:{playwright:{type:'string'},browser:{type:'str
 assert(values.playwright&&values.browser);
 await mkdir(values.output,{recursive:true});
 const receipt={status:'running',rows:[],hashes:{}};
-for(const file of ['src/fluidgrain_core.c','src/fluidgrain_grain_plan.h','src/fluidgrain_pack.c','src/fluidgrain_pack.h','src/fluidgrain_plan_opcode.inc','web/grain-plan.ts','web/grain-plan.wgsl','web/grain-renderer.ts','tests/test_grain_gpu.worker.ts','build/wasm/fluidgrain.wasm'])receipt.hashes[file]=createHash('sha256').update(await readFile(file)).digest('hex');
+for(const file of ['src/naviergrain_core.c','src/naviergrain_grain_plan.h','src/naviergrain_pack.c','src/naviergrain_pack.h','src/naviergrain_plan_opcode.inc','web/grain-plan.ts','web/grain-plan.wgsl','web/grain-renderer.ts','tests/test_grain_gpu.worker.ts','build/wasm/naviergrain.wasm'])receipt.hashes[file]=createHash('sha256').update(await readFile(file)).digest('hex');
 const save=()=>writeFile(resolve(values.output,'receipt.json'),JSON.stringify(receipt,null,2)+'\n');await save();
 const {chromium}=await import(pathToFileURL(resolve(values.playwright)).href);
 let browser,pending=Promise.resolve();

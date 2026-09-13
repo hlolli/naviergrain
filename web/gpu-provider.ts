@@ -3,8 +3,8 @@
  */
 import {SolverEngine, SharedRing, commandBytes, packetBytes, type BridgeSetup} from "./bridge";
 import {GPUFieldSolver, type GPUField, type GPUProfile} from "./gpu-solver";
-import {config as I, control as C} from "./fluidgrain-schema";
-import schema from "../schema/fluidgrain-v1.json";
+import {config as I, control as C} from "./naviergrain-schema";
+import schema from "../schema/naviergrain-v1.json";
 import type {CsoundApi} from "./engine";
 
 export interface FieldCommand {
@@ -14,7 +14,7 @@ export interface FieldCommand {
 export function decodeFieldCommand(bytes: Uint8Array, key: bigint): FieldCommand {
   if (bytes.length !== commandBytes) throw new Error("Incomplete field command");
   const view = new DataView(bytes.buffer, bytes.byteOffset, bytes.byteLength);
-  if (view.getUint32(0, true) !== 0x4d434746 || view.getUint32(4, true) !== 1 ||
+  if (view.getUint32(0, true) !== 0x4d43474e || view.getUint32(4, true) !== 1 ||
       view.getBigUint64(8, true) !== key || bytes.subarray(48,64).some(v => v !== 0))
     throw new Error("Invalid field command header");
   const command = {key, epoch:view.getBigUint64(16,true), reset:view.getBigUint64(24,true),
@@ -30,7 +30,7 @@ export function decodeFieldCommand(bytes: Uint8Array, key: bigint): FieldCommand
   }
   return command;
 }
-/** Wire-identical to fg_packet_encode; no JS-number conversion of uint64 clocks. */
+/** Wire-identical to ng_packet_encode; no JS-number conversion of uint64 clocks. */
 export function encodeGPUField(command: FieldCommand, field: GPUField, grid: number): Uint8Array {
   const bytes = new Uint8Array(packetBytes(grid)), view = new DataView(bytes.buffer);
   const diagnostics = [4,5,6,7,8,1].map(i => field.diagnostics[i]!);
@@ -40,7 +40,7 @@ export function encodeGPUField(command: FieldCommand, field: GPUField, grid: num
       !Number.isFinite(field.time) || field.time < 0 ||
       !Number.isSafeInteger(field.interventions) || field.interventions < 0)
     throw new Error("Invalid GPU field packet");
-  view.setUint32(0,0x4c464746,true); view.setUint32(4,1,true);
+  view.setUint32(0,0x4c46474e,true); view.setUint32(4,1,true);
   view.setUint32(8,128,true); view.setUint32(12,bytes.length-128,true);
   view.setBigUint64(16,command.key,true); view.setBigUint64(24,command.epoch,true);
   view.setBigUint64(32,command.sequence,true); view.setBigUint64(40,command.frame,true);

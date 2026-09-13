@@ -2,7 +2,7 @@
  * only capture advances instrument time. No AudioWorklet contract. */
 import {PreparedChannels, reserveHostScratch} from './channels';
 import {browserConfig, type CsoundApi, type Settings} from './engine';
-import {controlDefaults, stat} from './fluidgrain-schema';
+import {controlDefaults, stat} from './naviergrain-schema';
 const diagnosticNames = ['voice_drops', 'cap_drops', 'numeric_interventions'] as const;
 export interface GrainBatch { readonly ticket: bigint; readonly start: bigint; readonly frames: number; readonly packet: Uint8Array; readonly records: number; readonly peakVoices: number; }
 export class GrainPlanHost {
@@ -38,7 +38,7 @@ instr 1
 iConfig[] fillarray ${cfg.join(',')}
 kControl[] fillarray ${settings.controls.join(',')}
 ${settings.controls.map((_,i)=>`kControl[${i}] chnget "pg.c${i}"`).join('\n')}
-kAddress, kStats[] fluidgrain_plan giSource, ${settings.sourceRate}, iConfig, kControl, ${maxFrames}
+kAddress, kStats[] naviergrain_plan giSource, ${settings.sourceRate}, iConfig, kControl, ${maxFrames}
 chnset kAddress, "pg.address"
 ${diagnosticNames.map(name=>`chnset kStats[${stat[name]}], "pg.${name}"`).join('\n')}
 endin
@@ -59,7 +59,7 @@ f 0 z
       if(!Number.isSafeInteger(this.address)||this.address%8||this.address<8||this.address+128>this.buffer.byteLength)
         throw new Error('Invalid plan mailbox address');
       const h=this.header();
-      if(h[0]!==0x4d504746||h[1]!==2||this.address+h[2]!>this.buffer.byteLength)throw new Error('Plan mailbox ABI mismatch');
+      if(h[0]!==0x4d50474e||h[1]!==2||this.address+h[2]!>this.buffer.byteLength)throw new Error('Plan mailbox ABI mismatch');
       if(!(h[21]! & 1))throw new Error('Plan host lacks CPU-only capture; rebuild instrument assets');
       this.offsets={packet:h[10]!,output:h[11]!};
       this.resources=new Uint8Array(this.buffer,this.address+h[8]!,h[9]!).slice();

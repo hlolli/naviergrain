@@ -32,7 +32,7 @@ def main():
     assert profiler.summary([]) is None
     assert profiler.summary([4, 1, 3, 2]) == dict(
         calls=4, mean_ms=2.5, p50_ms=2, p99_ms=4, p999_ms=4, maximum_ms=4)
-    with tempfile.TemporaryDirectory(prefix='fluidgrain-profile-') as directory:
+    with tempfile.TemporaryDirectory(prefix='naviergrain-profile-') as directory:
         reports = []
         for instrumented, module in ((False, args.module), (True, args.profile_module)):
             output = Path(directory) / f'{instrumented}.json'

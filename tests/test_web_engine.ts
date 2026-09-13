@@ -3,7 +3,7 @@ import {readFile} from "node:fs/promises";
 import {resolve} from "node:path";
 import {OfflineEngine, bellSource, encodeWav, type CsoundApi, type Settings} from "../web/engine";
 import {validateView} from "../web/visualizer";
-import {controlDefaults} from "../web/fluidgrain-schema";
+import {controlDefaults} from "../web/naviergrain-schema";
 
 const root = resolve(import.meta.dir, "..");
 const entry = await readFile(resolve(root,
@@ -16,7 +16,7 @@ Object.defineProperty(globalThis, "window", {value: {
 }, configurable: true});
 const factory = new Function(entry.replace(marker, "return __lcs__;"))() as
   (options: {withPlugins: ArrayBuffer[]}) => Promise<CsoundApi>;
-const plugin = await readFile(resolve(root, "build/wasm/fluidgrain.wasm"));
+const plugin = await readFile(resolve(root, "build/wasm/naviergrain.wasm"));
 const api = await factory({withPlugins: [plugin.slice().buffer]});
 const includes = await readFile(resolve(root, "build/web/prepared.inc"), "utf8");
 const settings = (): Settings => ({

@@ -29,14 +29,14 @@ def build(output, header=None, bun="bun"):
     if header:
         # Fixed source delimiter cannot collide silently with edited UI code.
         embedded = page.replace("<!--SCRIPT-->", "<script>" + (output / "app.js").read_text() + "</script>")
-        if ')FGHTML"' in embedded:
+        if ')NGHTML"' in embedded:
             raise ValueError("UI conflicts with the C++ embedding delimiter")
         header.parent.mkdir(parents=True, exist_ok=True)
         profiles=json.loads((ROOT / 'ui/about.json').read_text())['links']
         urls=','.join(json.dumps(p['url']) for p in profiles)
-        header.write_text('static const char fg_ui_html[] = R"FGHTML(' + embedded + ')FGHTML";\n' +
-                          f'static const char *const fg_profile_urls[] = {{{urls}}};\n' +
-                          f'static constexpr unsigned fg_profile_count = {len(profiles)};\n')
+        header.write_text('static const char ng_ui_html[] = R"NGHTML(' + embedded + ')NGHTML";\n' +
+                          f'static const char *const ng_profile_urls[] = {{{urls}}};\n' +
+                          f'static constexpr unsigned ng_profile_count = {len(profiles)};\n')
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)

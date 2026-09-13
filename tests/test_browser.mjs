@@ -168,8 +168,8 @@ try {
   const pendingDownload = page.waitForEvent("download");
   await page.locator("#download").click();
   const download = await pendingDownload;
-  assert.equal(download.suggestedFilename(), "fluidgrain.wav");
-  await download.saveAs(resolve(values.output, "fluidgrain.wav"));
+  assert.equal(download.suggestedFilename(), "naviergrain.wav");
+  await download.saveAs(resolve(values.output, "naviergrain.wav"));
   await page.locator("#seconds").fill("2");
   await page.locator('[name="grain_ms"]').fill("500");
   await page.locator('[name="grain_rate"]').fill("600");

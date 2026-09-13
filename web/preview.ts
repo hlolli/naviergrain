@@ -17,7 +17,7 @@ export class BufferedPreview {
       if (context.sampleRate !== 48000) throw new Error("Preview requires a 48 kHz audio context");
       await context.audioWorklet.addModule(new URL("./preview.worklet.js", import.meta.url));
       if (this.closed) throw new Error("Preview cancelled");
-      const node = new AudioWorkletNode(context, "fluidgrain-preview", {
+      const node = new AudioWorkletNode(context, "naviergrain-preview", {
         numberOfInputs: 0, numberOfOutputs: 1, outputChannelCount: [2],
       });
       this.node = node;

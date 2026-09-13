@@ -20,16 +20,16 @@ static CSOUND *prepare(const char *module,int gpu,int device,unsigned frames) {
   }
   char call[512],csd[8192];
   if(gpu)snprintf(call,sizeof(call),
-    "aL,aR,kStats[],kGPU fluidgrain_gpu giSource,sr*.75,iConfig,kControl,%d,kEnable\nchnset kGPU,\"gpu\"",device);
-  else snprintf(call,sizeof(call),"aL,aR,kStats[] fluidgrain giSource,sr*.75,iConfig,kControl");
+    "aL,aR,kStats[],kGPU naviergrain_gpu giSource,sr*.75,iConfig,kControl,%d,kEnable\nchnset kGPU,\"gpu\"",device);
+  else snprintf(call,sizeof(call),"aL,aR,kStats[] naviergrain giSource,sr*.75,iConfig,kControl");
   snprintf(csd,sizeof(csd),
     "<CsoundSynthesizer>\n<CsOptions>\n-n -d -m0 --sample-accurate\n</CsOptions>\n<CsInstruments>\n"
-    "sr=48000\nksmps=%u\nnchnls=2\n0dbfs=1\n#include \"include/fluidgrain.inc\"\n"
+    "sr=48000\nksmps=%u\nnchnls=2\n0dbfs=1\n#include \"include/naviergrain.inc\"\n"
     "giSource ftgen 1,0,-997,10,1,.2,.1\ninstr 1\n"
-    "iConfig[] fillarray $FG_CONFIG_DEFAULTS\niConfig[$FG_CONFIG_GRID_SIZE]=16\n"
-    "iConfig[$FG_CONFIG_MAX_GRAINS]=128\niConfig[$FG_CONFIG_SOURCE_LOOP]=1\n"
-    "kControl[] fillarray $FG_CONTROL_DEFAULTS\nkControl[$FG_CONTROL_GRAIN_RATE] init 1200\n"
-    "kControl[$FG_CONTROL_GAIN] init .1\nkControl[$FG_CONTROL_RESET] chnget \"reset\"\n"
+    "iConfig[] fillarray $NG_CONFIG_DEFAULTS\niConfig[$NG_CONFIG_GRID_SIZE]=16\n"
+    "iConfig[$NG_CONFIG_MAX_GRAINS]=128\niConfig[$NG_CONFIG_SOURCE_LOOP]=1\n"
+    "kControl[] fillarray $NG_CONTROL_DEFAULTS\nkControl[$NG_CONTROL_GRAIN_RATE] init 1200\n"
+    "kControl[$NG_CONTROL_GAIN] init .1\nkControl[$NG_CONTROL_RESET] chnget \"reset\"\n"
     "kEnable chnget \"enable\"\n%s\nouts aL,aR\nendin\n</CsInstruments>\n"
     "<CsScore>\ni 1 0.000145833333333 0.31\ne\n</CsScore>\n</CsoundSynthesizer>\n",frames,call);
   if(gpu==2) {
@@ -37,10 +37,10 @@ static CSOUND *prepare(const char *module,int gpu,int device,unsigned frames) {
      * No device is opened: this tests the explicit --realtime guard. */
     snprintf(csd,sizeof(csd),
       "<CsoundSynthesizer>\n<CsOptions>\n-n -d -m0\n</CsOptions>\n<CsInstruments>\n"
-      "sr=48000\nksmps=32\nnchnls=2\n0dbfs=1\n#include \"include/fluidgrain.inc\"\n"
-      "giSource ftgen 1,0,-997,10,1\niConfig[] fillarray $FG_CONFIG_DEFAULTS\n"
-      "kControl[] fillarray $FG_CONTROL_DEFAULTS\nkEnable init 1\n"
-      "aL,aR,kStats[],kGPU fluidgrain_gpu giSource,sr,iConfig,kControl,0,kEnable\n"
+      "sr=48000\nksmps=32\nnchnls=2\n0dbfs=1\n#include \"include/naviergrain.inc\"\n"
+      "giSource ftgen 1,0,-997,10,1\niConfig[] fillarray $NG_CONFIG_DEFAULTS\n"
+      "kControl[] fillarray $NG_CONTROL_DEFAULTS\nkEnable init 1\n"
+      "aL,aR,kStats[],kGPU naviergrain_gpu giSource,sr,iConfig,kControl,0,kEnable\n"
       "</CsInstruments>\n<CsScore>\nf 0 .01\ne\n</CsScore>\n</CsoundSynthesizer>\n");
     int result=csoundCompileCSD(h,csd,1,0);
     if(!result)result=csoundStart(h);

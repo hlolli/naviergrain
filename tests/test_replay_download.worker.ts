@@ -8,7 +8,7 @@ onmessage=async ({data}:MessageEvent<Uint8Array>)=>{
   try {
     const host=new URL("./csound.js",import.meta.url).href;
     const {libcsound}=await import(host) as {libcsound(o:{withPlugins:ArrayBuffer[]}):Promise<CsoundApi>};
-    const api=await libcsound({withPlugins:[await (await fetch("./fluidgrain.wasm")).arrayBuffer()]});
+    const api=await libcsound({withPlugins:[await (await fetch("./naviergrain.wasm")).arrayBuffer()]});
     player=await ReplayPlayer.create(api,await (await fetch("./prepared.inc")).text(),data,
       await sha256(new Uint8Array(await (await fetch("./provenance.json")).arrayBuffer())));
     const pcm=new Float64Array(player.frames*2);

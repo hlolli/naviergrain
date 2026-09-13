@@ -1,7 +1,7 @@
 #include "audio.hpp"
-#include "fluidgrain_live.h"
+#include "naviergrain_live.h"
 extern "C" {
-#include "fluidgrain_core.h"
+#include "naviergrain_core.h"
 }
 #include <algorithm>
 #include <chrono>
@@ -11,13 +11,13 @@ extern "C" {
 using namespace std::chrono_literals;
 static_assert(std::atomic<uint64_t>::is_always_lock_free,"Audio counters must be lock-free");
 Instrument::Instrument() {
-  fg_live_defaults(controls.data());
+  ng_live_defaults(controls.data());
 }
 Instrument::~Instrument(){stop();}
 void Instrument::control(unsigned index,double value) {
-  if(!fg_live_control_valid(index,value))throw std::runtime_error("Control is out of range");
+  if(!ng_live_control_valid(index,value))throw std::runtime_error("Control is out of range");
   std::lock_guard<std::mutex> lock(mutex);
-  if(index==FG_CONTROL_RESET)reset=reset||value!=0;
+  if(index==NG_CONTROL_RESET)reset=reset||value!=0;
   else controls[index]=value;
 }
 void Instrument::use_cpu(){cpu_requested.store(true);}
@@ -77,7 +77,7 @@ void Instrument::callback(ma_device *device,void *output,const void *,ma_uint32 
   s.read.store(r,std::memory_order_release);
 }
 void Instrument::render(bool cpu) {
-  FGLive *live=fg_live_create(device.sampleRate,cpu?-1:0);
+  NGLive *live=ng_live_create(device.sampleRate,cpu?-1:0);
   if(!live){failed=true;return;}
   unsigned batch=0;
   while(running) {
@@ -86,33 +86,33 @@ void Instrument::render(bool cpu) {
     if(w-r>=2048){std::this_thread::sleep_for(250us);continue;}
     {
       std::lock_guard<std::mutex> lock(mutex);
-      for(unsigned i=0;i<controls.size();++i)fg_live_control(live,i,controls[i]);
-      if(reset){fg_live_control(live,FG_CONTROL_RESET,1);reset=false;}
+      for(unsigned i=0;i<controls.size();++i)ng_live_control(live,i,controls[i]);
+      if(reset){ng_live_control(live,NG_CONTROL_RESET,1);reset=false;}
     }
-    if(cpu_requested)fg_live_cpu(live);
-    if(!fg_live_render(live,512)) {
+    if(cpu_requested)ng_live_cpu(live);
+    if(!ng_live_render(live,512)) {
       std::lock_guard<std::mutex> lock(mutex);error="Synthesis stopped; restart playback";failed=true;break;
     }
-    const double *audio=fg_live_audio(live);
+    const double *audio=ng_live_audio(live);
     for(unsigned i=0;i<512;++i)for(unsigned c=0;c<2;++c)
       pcm[2*((w+i)%queue_frames)+c]=float(std::clamp(audio[2*i+c],-1.0,1.0));
     write.store(w+512,std::memory_order_release);
     if(++batch%2==0) {
       std::ostringstream json;json.imbue(std::locale::classic());json.precision(10);
-      json<<"\"backend\":\""<<FG_DESKTOP_GPU_NAME<<"\",\"gpu\":"<<(fg_live_gpu(live)?"true":"false")<<",\"particles\":[";
-      const double *particles=fg_live_particles(live);
-      if(particles)for(unsigned i=0;i<FG_LIVE_PARTICLE_HEADER+(unsigned)particles[2]*FG_LIVE_PARTICLE_STRIDE;++i)json<<(i?",":"")<<particles[i];
-      json<<"],\"stats\":[";const double *stats=fg_live_stats(live);
-      for(unsigned i=0;i<FG_STAT_COUNT;++i)json<<(i?",":"")<<stats[i];
+      json<<"\"backend\":\""<<NG_DESKTOP_GPU_NAME<<"\",\"gpu\":"<<(ng_live_gpu(live)?"true":"false")<<",\"particles\":[";
+      const double *particles=ng_live_particles(live);
+      if(particles)for(unsigned i=0;i<NG_LIVE_PARTICLE_HEADER+(unsigned)particles[2]*NG_LIVE_PARTICLE_STRIDE;++i)json<<(i?",":"")<<particles[i];
+      json<<"],\"stats\":[";const double *stats=ng_live_stats(live);
+      for(unsigned i=0;i<NG_STAT_COUNT;++i)json<<(i?",":"")<<stats[i];
       json<<"],\"wave\":[";
       for(unsigned i=0;i<128;++i)json<<(i?",":"")<<(audio[i*8]+audio[i*8+1])*.5;
-      json<<"],\"spectrum\":[";const double *spectrum=fg_live_spectrum(live);
-      for(unsigned i=0;i<FG_LIVE_SPECTRUM_BINS;++i)json<<(i?",":"")<<spectrum[i];
+      json<<"],\"spectrum\":[";const double *spectrum=ng_live_spectrum(live);
+      for(unsigned i=0;i<NG_LIVE_SPECTRUM_BINS;++i)json<<(i?",":"")<<spectrum[i];
       json<<"]";
       std::lock_guard<std::mutex> lock(mutex);observed=json.str();
     }
   }
-  fg_live_destroy(live);
+  ng_live_destroy(live);
 }
 std::string Instrument::snapshot() {
   std::lock_guard<std::mutex> lock(mutex);

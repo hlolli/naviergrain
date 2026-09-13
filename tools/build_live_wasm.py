@@ -23,7 +23,7 @@ if args.sysroot:
     command += ["--sysroot=" + args.sysroot]
 if args.ld:
     command += ["-fuse-ld=" + args.ld]
-command += ["-Wl,--export=fg_live_" + name for name in exports]
-command += [str(ROOT / "src" / ("fluidgrain_" + name + ".c")) for name in sources]
-command += ["-lm", "-o", str(args.output / "fluidgrain-live.wasm")]
+command += ["-Wl,--export=ng_live_" + name for name in exports]
+command += [str(ROOT / "src" / ("naviergrain_" + name + ".c")) for name in sources]
+command += ["-lm", "-o", str(args.output / "naviergrain-live.wasm")]
 subprocess.run(command, check=True)

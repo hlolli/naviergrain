@@ -1,4 +1,4 @@
-class FluidGrainOutput extends AudioWorkletProcessor {
+class NaviergrainOutput extends AudioWorkletProcessor {
   constructor() {
     super();this.slots=new Array(4);this.read=0;this.write=0;this.offset=0;this.frames=0;
     this.waiting=true;this.fade=0;this.last=[0,0];this.underruns=0;this.played=0;this.draining=false;this.ended=false;
@@ -33,4 +33,4 @@ class FluidGrainOutput extends AudioWorkletProcessor {
     return true;
   }
 }
-registerProcessor('fluidgrain-output',FluidGrainOutput);
+registerProcessor('naviergrain-output',NaviergrainOutput);

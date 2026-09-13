@@ -1,12 +1,12 @@
 import {GrainPlanHost} from '../web/grain-plan';
 import {GrainRenderer} from '../web/grain-renderer';
 import {bellSource,browserConfig,type CsoundApi} from '../web/engine';
-import {controlDefaults,control,config} from '../web/fluidgrain-schema';
+import {controlDefaults,control,config} from '../web/naviergrain-schema';
 function check(v:unknown,message:string): asserts v {if(!v)throw new Error(message);}
 Object.defineProperty(globalThis,'window',{value:{atob:globalThis.atob.bind(globalThis),btoa:globalThis.btoa.bind(globalThis),webkitAudioContext:undefined}});
 async function main() {
  const {libcsound}=await import(new URL('./csound.js',import.meta.url).href) as {libcsound(options:{withPlugins:ArrayBuffer[]}):Promise<CsoundApi>};
- const plugin=await(await fetch('./fluidgrain.wasm')).arrayBuffer();
+ const plugin=await(await fetch('./naviergrain.wasm')).arrayBuffer();
  const shader=await(await fetch('./grain-plan.wgsl')).text();
  const records:object[]=[];
  async function adapter() {

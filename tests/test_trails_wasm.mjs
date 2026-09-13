@@ -8,14 +8,14 @@ const wasmFile=process.argv[2];
 assert(wasmFile,'Pass the live WASM file');
 const w=(await WebAssembly.instantiate(readFileSync(wasmFile),{})).instance.exports;
 const view=Object.assign(Object.create(FlowView.prototype),{previous:new Map(),draw(){},lastTime:0});
-const live=w.fg_live_create(48000,-1);
+const live=w.ng_live_create(48000,-1);
 assert(live);
 let previous=new Map(),crossings=0,falseFlights=0;
 try {
-  assert(w.fg_live_control(live,2,500));
+  assert(w.ng_live_control(live,2,500));
   for(let block=0;block<1400;++block){
-    assert(w.fg_live_render(live,512));
-    const pointer=w.fg_live_particles(live),header=new Float64Array(w.memory.buffer,pointer,10);
+    assert(w.ng_live_render(live,512));
+    const pointer=w.ng_live_particles(live),header=new Float64Array(w.memory.buffer,pointer,10);
     const p=new Float64Array(w.memory.buffer,pointer,10+header[2]*16),next=new Map();
     view.accept(p);
     for(let i=0;i<p[2];++i){
@@ -38,5 +38,5 @@ try {
   assert.equal(falseFlights,0,'No smoothed vertical flights after a periodic wrap');
   console.log(`Live trails: ${crossings} boundary crossings, no false vertical flights`);
 } finally {
-  w.fg_live_destroy(live);
+  w.ng_live_destroy(live);
 }

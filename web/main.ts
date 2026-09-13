@@ -1,9 +1,9 @@
 import {BufferedPreview} from './preview';
 import {SharedRing, commandBytes, packetBytes, type BridgeSetup} from "./bridge";
 import {Visualizer} from "./visualizer";
-import schema from "../schema/fluidgrain-v1.json";
+import schema from "../schema/naviergrain-v1.json";
 import {bellSource, maxSourceFrames, sampleRate} from "./engine";
-import {controlDefaults} from "./fluidgrain-schema";
+import {controlDefaults} from "./naviergrain-schema";
 
 function element<T extends HTMLElement>(id: string): T {
   const node = document.getElementById(id);

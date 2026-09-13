@@ -9,7 +9,7 @@ export class BrowserRuntime {
     this.counts={played:0,underruns:0};
     try {
       await this.context.audioWorklet.addModule('audio.worklet.js');
-      this.node=new AudioWorkletNode(this.context,'fluidgrain-output',{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[2]});
+      this.node=new AudioWorkletNode(this.context,'naviergrain-output',{numberOfInputs:0,numberOfOutputs:1,outputChannelCount:[2]});
       const channel=new MessageChannel();
       this.worker=new Worker('live.worker.js',{type:'module'});
       await new Promise((resolve,reject)=>{

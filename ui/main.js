@@ -1,4 +1,4 @@
-import schema from '../schema/fluidgrain-v1.json';
+import schema from '../schema/naviergrain-v1.json';
 import {FlowView} from './flow.js';
 import {Spectrogram} from './spectrogram.js';
 import {BrowserRuntime} from './runtime.js';

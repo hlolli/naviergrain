@@ -1,4 +1,4 @@
-// Periodic unit-square MAC solver. Array planes match fluidgrain_field.c.
+// Periodic unit-square MAC solver. Array planes match naviergrain_field.c.
 // Dispatches, not workgroup barriers, separate globally dependent passes.
 struct Pass { n: u32, op: u32, a: u32, b: u32 }
 struct Settings { v: array<vec4<f32>, 8> }

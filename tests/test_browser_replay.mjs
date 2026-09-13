@@ -43,7 +43,7 @@ try {
   });
   assert(result.replay.withoutGPU);assert.equal(result.replay.sha256,result.hash);
   assert.equal(result.replay.bytes,result.wavBytes);
-  await writeFile(resolve(values.output,mode+".fgreplay.json"),new Uint8Array(result.take));
+  await writeFile(resolve(values.output,mode+".ngreplay.json"),new Uint8Array(result.take));
   records.push({mode,wavSha256:result.hash,wavBytes:result.wavBytes,takeBytes:result.take.length,exactReplay:true,noGPU:true});
  }
  await page.locator("#seconds").fill("3");await page.locator("#render").click();

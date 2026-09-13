@@ -24,9 +24,9 @@ static void birth(Voice *v, unsigned i) {
 }
 int main(void) {
   const uint32_t endian=1;require(*(const unsigned char *)&endian==1);
-  FGResampler reader;size_t coefficients=fg_resampler_doubles(4);
+  NGResampler reader;size_t coefficients=ng_resampler_doubles(4);
   double *storage=calloc(coefficients,sizeof(double));require(storage!=NULL);
-  fg_resampler_init(&reader,storage,4);
+  ng_resampler_init(&reader,storage,4);
   for(unsigned i=0;i<SOURCE;i++)source[i]=(float)(.4*sin(2*PI*17*i/SOURCE)+.2*sin(2*PI*197*i/SOURCE)+.1*cos(2*PI*401*i/SOURCE));
   size_t size=66+SOURCE+WINDOW+coefficients;
   float *data=calloc(size,sizeof(float));require(data!=NULL);
@@ -66,7 +66,7 @@ int main(void) {
           double env=(v->age==0||v->age==v->length-1)?0:.5-.5*cos(2*PI*v->age/(v->length-1));
           unsigned frame=first+j;live[frame]++;powers[frame]+=env*env;
           double inc=exp2(v->pitch);
-          double sample=fg_read_bandlimited(&reader,source,SOURCE,v->phase,inc,(int)v->loop,96)*env;
+          double sample=ng_read_bandlimited(&reader,source,SOURCE,v->phase,inc,(int)v->loop,96)*env;
           continuous[2*frame]+=sample*cos(.5*PI*v->pan);continuous[2*frame+1]+=sample*sin(.5*PI*v->pan);
           v->phase+=inc;if(v->loop)v->phase=fmod(v->phase,SOURCE);
           v->age++;
@@ -84,7 +84,7 @@ int main(void) {
           unsigned frame=start+(unsigned)p[8]+j,age=(unsigned)p[6]+j,len=(unsigned)p[7];
           pitch+=smooth10*(p[4]-pitch);pan+=smooth10*(p[5]-pan);
           double env=(age==0||age==len-1)?0:.5-.5*cos(2*PI*age/(len-1));
-          double inc=exp2(pitch),sample=fg_read_bandlimited(&reader,source,SOURCE,phase,inc,(int)p[10],96)*env;
+          double inc=exp2(pitch),sample=ng_read_bandlimited(&reader,source,SOURCE,phase,inc,(int)p[10],96)*env;
           out[2*frame]+=sample*cos(.5*PI*pan);out[2*frame+1]+=sample*sin(.5*PI*pan);
           renderPower[frame-start]+=env*env;
           phase+=inc;if(p[10])phase=fmod(phase,SOURCE);

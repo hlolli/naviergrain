@@ -3,7 +3,7 @@ import {GPUProvider} from '../web/gpu-provider';
 import {GPUFieldSolver} from '../web/gpu-solver';
 import {SharedRing, commandBytes, packetBytes, SolverEngine, type BridgeSetup} from '../web/bridge';
 import {OfflineEngine, bellSource, browserConfig, type CsoundApi} from '../web/engine';
-import {controlDefaults, control as C} from '../web/fluidgrain-schema';
+import {controlDefaults, control as C} from '../web/naviergrain-schema';
 Object.defineProperty(globalThis,'window',{value:{atob:atob.bind(globalThis),btoa:btoa.bind(globalThis),webkitAudioContext:undefined}});
 type Request = {role:'audio'|'provider'; mode:'external'|'gpu'; profile:'default'|'swirl'; fault:'none'|'stall'|'failure'; seconds:number; setup:BridgeSetup; clock:SharedArrayBuffer};
 const sleep = (ms:number) => new Promise<void>(resolve=>setTimeout(resolve,ms));
@@ -24,7 +24,7 @@ async function run(r:Request) {
   const clock=new Int32Array(r.clock), cold=performance.now();
   const {libcsound}=await import(new URL('./csound.js',import.meta.url).href) as {
     libcsound(options:{withPlugins:ArrayBuffer[]}):Promise<CsoundApi>};
-  const response=await fetch('./fluidgrain.wasm');check(response.ok,'Missing plugin');
+  const response=await fetch('./naviergrain.wasm');check(response.ok,'Missing plugin');
   const api=await libcsound({withPlugins:[await response.arrayBuffer()]});
   const faultFrame=Math.floor(r.seconds/3)*48000;
   let provider:SolverEngine|GPUProvider|undefined, engine:OfflineEngine|undefined;

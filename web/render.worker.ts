@@ -98,7 +98,7 @@ globalThis.onmessage = async ({data}: MessageEvent<
       libcsound(options: {withPlugins: ArrayBuffer[]}): Promise<CsoundApi>
     };
     const [pluginResponse, includesResponse] = await Promise.all([
-      fetch(new URL("./fluidgrain.wasm", import.meta.url)),
+      fetch(new URL("./naviergrain.wasm", import.meta.url)),
       fetch(new URL("./prepared.inc", import.meta.url)),
     ]);
     if (!pluginResponse.ok || !includesResponse.ok) throw new Error("Missing instrument assets");

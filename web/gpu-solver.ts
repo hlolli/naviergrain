@@ -2,8 +2,8 @@
  * One prepared readback slot: free -> in-flight -> mapped -> free. Concurrent
  * steps are rejected before submission; no device work belongs on audio.
  */
-import {control as C} from "./fluidgrain-schema";
-import schema from "../schema/fluidgrain-v1.json";
+import {control as C} from "./naviergrain-schema";
+import schema from "../schema/naviergrain-v1.json";
 export interface GPUProfile {
   grid: number; seed: number; fluidHz: number; particleHz: number;
   pressureIterations: number; viscosityIterations: number;
@@ -55,7 +55,7 @@ export class GPUFieldSolver {
         if (!response.ok) throw new Error("Missing WGSL solver asset");
         shader = await response.text();
       }
-      const module = device.createShaderModule({label:"FluidGrain MAC solver", code:shader});
+      const module = device.createShaderModule({label:"Naviergrain MAC solver", code:shader});
       const info = await module.getCompilationInfo();
       const errors = info.messages.filter(item => item.type === "error");
       if (errors.length) throw new Error(errors.map(item => item.message).join("\n"));
